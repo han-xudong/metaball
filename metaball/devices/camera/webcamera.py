@@ -1,16 +1,14 @@
 #!/usr/bin/env python
 
 import argparse
-import sys
-from typing import Tuple
 import time
 import cv2
-import yaml
 import numpy as np
-from typing import Optional
+from typing import Tuple
 from collections import deque
 from scipy.spatial.transform import Rotation as R
-from metaball.modules.zmq.camera import CameraSubscriber
+from metaball.modules.zmq import CameraSubscriber
+from metaball.config import CameraConfig, DetectorConfig
 
 
 class WebCamera:
@@ -19,21 +17,48 @@ class WebCamera:
 
     The class is to get the image from a web camera and detect the ArUco markers.
     The poses of the markers are estimated and filtered.
+    
+    Attributes:
+        name (str): The name of the camera.
+        mode (str): The mode of the camera, default is "web".
+        width (int): The width of the camera image.
+        height (int): The height of the camera image.
+        mtx (np.ndarray): The camera matrix.
+        dist (np.ndarray): The camera distortion coefficients.
+        camera (CameraSubscriber): The camera subscriber to get the image.
+        detector (cv2.aruco.ArucoDetector): The ArUco detector to detect the markers.
+        aruco_estimate_params (cv2.aruco.EstimateParameters): The parameters for estimating the pose of the markers.
+        marker_size (float): The size of the ArUco markers in meters.
+        marker_num (int): The number of ArUco markers.
+        transfer_tvec (np.ndarray): The translation vector from marker frame to global frame.
+        transfer_rmat (np.ndarray): The rotation matrix from marker frame to global frame.
+        pose (np.ndarray): The current pose of the markers.
+        filter_on (bool): Whether to apply pose filtering.
+        filter_frame (int): The number of frames to use for pose filtering.
+        last_pose (np.ndarray): The last pose of the markers.
+        img (np.ndarray): The current image from the camera.
+        first_frame (bool): Whether this is the first frame.
+        clahe (cv2.CLAHE): The Contrast Limited Adaptive Histogram Equalization for image enhancement.
+        sharpen_kernel (np.ndarray): The kernel for sharpening the image.
+        init_pose (np.ndarray): The initial pose of the markers.
+        init_tvec (np.ndarray): The initial translation vector of the markers.
+        init_rvec (np.ndarray): The initial rotation vector of the markers.
+        init_rmat (list): The initial rotation matrices of the markers.
     """
 
     def __init__(
         self,
         name: str,
-        camera_params: dict,
-        detector_params: Optional[dict] = None,
+        camera_cfg: CameraConfig,
+        detector_cfg: DetectorConfig = DetectorConfig(),
     ) -> None:
         """
         Initialize the WebCamera.
 
         Args:
-            name: The name of the camera.
-            camera_params: The camera parameters.
-            detector_params: The detector parameters.
+            name (str): The name of the camera.
+            camera_cfg (CameraConfig): The camera configuration.
+            detector_cfg (DetectorConfig): The detector configuration.
         """
 
         # Camera initialization
@@ -42,11 +67,15 @@ class WebCamera:
         # Set the camera parameters
         self.mode = "web"
         print(f"Camera mode: {self.mode.upper()}")
-        self.width = camera_params["width"]
-        self.height = camera_params["height"]
-        self.mtx = np.array(camera_params["mtx"])
-        self.dist = np.array(camera_params["dist"])
-        self.camera = CameraSubscriber(host=camera_params["host"], port=camera_params["port"])
+        self.width = camera_cfg.width
+        self.height = camera_cfg.height
+        self.mtx = np.array(camera_cfg.mtx)
+        self.dist = np.array(camera_cfg.dist)
+        if camera_cfg.host is None:
+            raise ValueError(
+                "Camera host is not set. Please check the configuration file."
+            )
+        self.camera = CameraSubscriber(host=camera_cfg.host, port=camera_cfg.port)
         print(f"Resolution: {self.width}x{self.height}")
         print(f"Camera matrix:\n{self.mtx}")
         print(f"Camera distortion:\n{self.dist}")
@@ -58,25 +87,38 @@ class WebCamera:
         # Set the detector parameters
         aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
         aruco_detector_params = cv2.aruco.DetectorParameters()
-        if not detector_params:
-            for key in detector_params:
-                aruco_detector_params.__setattr__(key, detector_params[key])
+        for attr, value in vars(detector_cfg).items():
+            if hasattr(aruco_detector_params, attr):
+                # Set the attribute if it exists in the DetectorParameters
+                if isinstance(value, (int, float, bool)):
+                    aruco_detector_params.__setattr__(attr, value)
+                elif isinstance(value, list):
+                    # Convert list to numpy array if needed
+                    aruco_detector_params.__setattr__(attr, np.array(value))
+            else:
+                # If the attribute does not exist, skip setting it
+                continue
         self.detector = cv2.aruco.ArucoDetector(aruco_dict, aruco_detector_params)
         self.aruco_estimate_params = cv2.aruco.EstimateParameters()
         self.aruco_estimate_params.solvePnPMethod = cv2.SOLVEPNP_IPPE_SQUARE
         # Set the marker size
-        self.marker_size = camera_params["marker_size"]
+        self.marker_size = camera_cfg.marker_size
+        self.marker_num = camera_cfg.marker_num
         print(f"Marker size: {self.marker_size}")
         # Set the translation and rotation from marker frame to global frame
-        self.transfer_tvec = np.array(camera_params["marker2global"]["translation"])
-        self.transfer_rmat = np.array(camera_params["marker2global"]["rotation"])
-        # Set the initial pose
-        self.init_pose = np.zeros(6)
+        self.transfer_tvec = np.array(camera_cfg.marker2global_tvec)
+        self.transfer_rmat = np.array(camera_cfg.marker2global_rmat)
         # Set the pose
-        self.pose = np.zeros(6)
+        self.pose = np.zeros([self.marker_num, 6])
+        # Set the clahe
+        self.clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
+        # Set the sharpen kernel
+        self.sharpen_kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
+        # self.sharpen_kernel = np.ones((5, 5), np.float32) / 25
+
         # Set the filter parameters
-        self.filter_on = camera_params["filter_on"]
-        self.filter_frame = camera_params["filter_frame"]
+        self.filter_on = camera_cfg.filter_on
+        self.filter_frame = camera_cfg.filter_frame
         print(f"Pose Filter: {self.filter_on}")
         if self.filter_on:
             print(f"Filter frame: {self.filter_frame}")
@@ -84,10 +126,13 @@ class WebCamera:
         self.img = np.zeros((self.height, self.width, 3))
         self.first_frame = True
 
-        self.clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
-        self.sharpen_kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-        # self.sharpen_kernel = np.ones((5, 5), np.float32) / 25
-
+        # Check if the camera is connected
+        while not self._is_connected():
+            print(
+                f"Camera {self.name}: not connected. Retrying in 1 second..."
+            )
+            time.sleep(1)
+        
         # Init pose
         print(f"Calculating the initial pose of {self.name} ...")
         self.init_pose = self._calculateInitPose()
@@ -96,7 +141,9 @@ class WebCamera:
         self.init_rmat = [R.from_rotvec(rvec).as_matrix() for rvec in self.init_rvec]
 
         print(f"Initial pose: {self.init_pose}")
-        print(f"The finger motion will be calculated as reference pose base on this initial pose.")
+        print(
+            f"The finger motion will be calculated as reference pose base on this initial pose."
+        )
         print("ArUco Detector Initialization Done.")
         print("{:-^80}".format(""))
 
@@ -205,10 +252,12 @@ class WebCamera:
 
         # Check if the markers are detected
         if ids is None:
-            return np.zeros([1, 6]), img
+            return np.ones([self.marker_num, 6]) * 1000, img
 
         # Estimate the pose using IPPE_SQUARE
-        rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(corners, self.marker_size, self.mtx, self.dist)
+        rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(
+            corners, self.marker_size, self.mtx, self.dist
+        )
         pose = np.hstack((tvec * 1000, rvec)).reshape(-1, 6)
 
         # Filter the pose
@@ -217,9 +266,28 @@ class WebCamera:
 
         # Draw the markers
         color_image_result = cv2.aruco.drawDetectedMarkers(img, corners, ids)
-        color_image_result = cv2.drawFrameAxes(img, self.mtx, self.dist, rvec, tvec, self.marker_size)
+        color_image_result = cv2.drawFrameAxes(
+            img, self.mtx, self.dist, rvec, tvec, self.marker_size
+        )
         # Return the pose and image
         return pose, color_image_result
+    
+    def _is_connected(self) -> bool:
+        """
+        Check if the camera is connected.
+
+        The function will return True if the camera is connected, otherwise False.
+        This function is used to check the connection of the camera.
+
+        Returns:
+            bool: True if the camera is connected, otherwise False.
+        """
+        
+        try:
+            img = self.readImage()
+            return True if img is not None else False
+        except Exception:
+            return False
 
     def release(self) -> None:
         """
@@ -252,10 +320,13 @@ class WebCamera:
 
         # Read the image from the camera
         try:
-            img = cv2.imdecode(self.camera.subscribeMessage(), cv2.IMREAD_COLOR)
-        except ValueError:
-            print("\033[31mCannot read the image from the camera.\033[0m")
-            sys.exit()
+            img = self.camera.subscribeMessage()
+            img = cv2.imdecode(img, cv2.IMREAD_COLOR)
+        except Exception:
+            raise ValueError(
+                f"Error reading image from camera. Please check the camera connection."
+            )
+        
         return img
 
     def readImageAndPose(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -271,7 +342,12 @@ class WebCamera:
         """
 
         # Read the image from the camera
-        img = self.readImage()
+        try:
+            img = self.readImage()
+        except Exception as e:
+            raise ValueError(
+                f"Error reading image: {e}. Please check the camera connection."
+            )
 
         # Get the pose and image from the camera
         pose, img = self._imageToPose(img)
@@ -282,10 +358,12 @@ class WebCamera:
             self.last_pose = pose
 
         # Check if the pose is valid
-        if np.linalg.norm(pose[:3] - self.last_pose[:3]) > 20:
-            self.pose = self.last_pose
-        else:
-            self.pose = pose
+        for i in range(len(pose)):
+            if np.linalg.norm(pose[i, :3] - self.last_pose[i, :3]) > 20:
+                # If the pose is not valid, use the last pose
+                self.pose[i] = self.last_pose[i]
+            else:
+                self.pose = pose
         self.last_pose = self.pose
         self.img = img
 
@@ -454,13 +532,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--name",
         type=str,
-        default="Camera",
+        default="Web Camera",
         help="The name of the camera.",
     )
     parser.add_argument(
         "--params_path",
         type=str,
-        default="./configs/camera/maixcam-9674.yaml",
         help="The path of the camera parameters.",
     )
     parser.add_argument(
@@ -470,19 +547,13 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # Read the camera parameters
-    with open(args.params_path, "r") as f:
-        camera_params = yaml.load(f.read(), Loader=yaml.Loader)
-
-    with open("./configs/detector.yaml", "r") as f:
-        detector_params = yaml.load(f.read(), Loader=yaml.Loader)
-
     try:
         # Create a camera
+        camera_cfg = CameraConfig()
+        camera_cfg.read_config_file(args.params_path)
         camera = WebCamera(
             name=args.name,
-            camera_params=camera_params,
-            detector_params=detector_params,
+            camera_cfg=camera_cfg,
         )
         show_img = args.show_img
 

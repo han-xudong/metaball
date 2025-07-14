@@ -16,14 +16,25 @@ For more information, please refer to https://github.com/han-xudong/metaball
 """
 
 import argparse
-import os
 from typing import Tuple
-import onnxruntime
 import numpy as np
+from metaball.utils.nn_utils import init_model
+from metaball.config import BallNetConfig
 
 class BallNet:
-    def __init__(self, name, model_path) -> None:
-        """BallNet initialization.
+    """
+    BallNet class.
+    
+    This class is used to load the BallNet model and perform inference.
+    The model is loaded using ONNX Runtime.
+    
+    Attributes:
+        name (str): The name of the model.
+        model_path (str): The path to the model file.
+    """
+    def __init__(self, ballnet_cfg: BallNetConfig) -> None:
+        """
+        BallNet initialization.
 
         Args:
             name: The name of the model.
@@ -31,21 +42,32 @@ class BallNet:
         """
         
         # Set the name and model path
-        self.name = name
-        self.model_path = model_path
-        if not self.model_path.endswith(".onnx"):
-            raise ValueError("\033[31mThe model path must end with .onnx\033[0m")
-        if not os.path.exists(self.model_path):
-            raise ValueError("\033[31mThe model path does not exist\033[0m")
+        self.name = ballnet_cfg.name
+        self.model_path = ballnet_cfg.model_path
         
-        # Create a ONNX runtime session
-        self.session = onnxruntime.InferenceSession(self.model_path)
+        # Create a ONNX runtime model
+        try:
+            self.model = init_model(self.model_path, ballnet_cfg.device)
+        except Exception as e:
+            raise ValueError(f"Failed to load the model: {e}")
         
         # Print the initialization message
         print("{:-^80}".format(f" {self.name} Initialization "))
         print("Model Path:", self.model_path)
-        print("Input:", [f"{input.name} ({input.shape[0]}, {input.shape[1]})" for input in self.session.get_inputs()])
-        print("Output:", [f"{output.name} ({output.shape[0]}, {output.shape[1]})" for output in self.session.get_outputs()])
+        print(
+            "Input:",
+            [
+                f"{input.name} ({input.shape[0]}, {input.shape[1]})"
+                for input in self.model.get_inputs()
+            ],
+        )
+        print(
+            "Output:",
+            [
+                f"{output.name} ({output.shape[0]}, {output.shape[1]})"
+                for output in self.model.get_outputs()
+            ],
+        )
         print("Model Initialization Done.")
         print("{:-^80}".format(""))
      
@@ -60,13 +82,9 @@ class BallNet:
             node (np.ndarray): The node displacement of the Ball.
         """
 
-        # Run the session
-        outputs = self.session.run(None, {"motion": motion.astype(np.float32).reshape(1, -1)})
-        
-        # Return force and node 
-        # Note: ONNX export in scripts/onnx_export.py defines output_index as [1, 2]
-        # where index 1 is force and index 2 is node/shape
-        return outputs[0], outputs[1]
+        return self.model.run(
+            None, {"motion": motion.astype(np.float32).reshape(1, -1)}
+        )
     
 
 if __name__ == "__main__":
@@ -87,12 +105,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Initialize the BallNet
-    Ball_net = BallNet(args.name, args.model_path)
+    ballnet_cfg = BallNetConfig(name=args.name, model_path=args.model_path)
     
-    # Given a random motion and infer the force and node
-    print("Given a random motion and infer the force and node...")
-    motion = np.concatenate([10*np.random.rand(1, 2), 3*np.random.rand(1, 1), 0.3*np.random.rand(1, 3)], axis=1)
-    print("Motion:", motion)
-    force, node = Ball_net.infer(motion)
-    print("Force:", force)
-    print("Node:", node)
+    ballnet = BallNet(ballnet_cfg)
