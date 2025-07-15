@@ -1,4 +1,4 @@
-<h1 align="center">Metaball</h1>
+<h1 align="center">MetaBall</h1>
 
 <p align="center">
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10-3776AB?logo=python&logoColor=white" /></a>
@@ -14,10 +14,10 @@
   <a href="https://a360.co/4ePH4PC">🧩CAD Files</a>
 </p>
 <p align="center">
-  <img src="docs/assets/banner.jpg" alt="MagiClaw Banner" />
+  <img src="docs/assets/banner.jpg" alt="MagiClaw Banner" width="700"/>
 </p>
 
-Metaball is a soft end-of-robot module capable of vision-based deformable perception. This repository contains the training and testing code for the BallNet model.
+MetaBall is a soft end-of-robot module capable of vision-based deformable perception. This repository contains the training and testing code for the BallNet model.
 
 ## 📦 Installation
 
@@ -52,21 +52,25 @@ You can also follow the [training guide](./docs/training.ipynb) to test the mode
 
 ## 🛠️ Hardware
 
-The hardware of the Metaball module includes a camera, a microcontroller, a power board, and a soft body. The camera is used for capturing images, while the microcontroller publishes the images through TCP protocol. The power board supports 6-36V input and powers the microcontroller. The soft body is made of polyurethane (PU), which is the main part to interact with the environment.
+The MetaBall hardware mainly consists of a camera, a controller board, a power board, an LED light board, a soft struture and several 3D-printed parts. The camera is used for capturing images, while the controller board publishes the images through TCP protocol. The power board supports 6-36V input and powers the controller board. The LED light board provides illumination for the camera. The soft struture is made of polyurethane (PU), which is the main part to interact with the environment. 3D-printed parts are used to assemble the camera, controller board, and power board together.
 
-CAD files of the Metaball are available on [Fusion](https://a360.co/4ePH4PC). You can also refer to the [assembly guide](./docs/assembly.md) for more details on how to assemble the Metaball.
+<p align="center">
+  <img src="docs/assets/assembly.jpg" alt="MetaBall Assembly" width="400" />
+</p>
+
+CAD files of the MetaBall are available on [Fusion](https://a360.co/4ePH4PC). Please refer to the [assembly guide](./docs/assembly.md) for more details on how to assemble the MetaBall.
 
 ## 🤖 Deployment
 
-To deploy the Metaball, please follow the [deployment guide](./docs/deployment.md). After connecting the Metaball to the host computer or WiFi and modifying the configuration file, you can publish the data by running the following command:
+After connecting the MetaBall to the host computer or WiFi and modifying the configuration, you can publish the data by running the following command:
 
 ```bash
 python run_metaball.py
 ```
 
-All data can be visualized through the [Metaball Viewer](https://github.com/han-xudong/metaball-viewer).
+All data can be visualized through the [MetaBall Viewer](https://github.com/han-xudong/metaball-viewer).
 
-![Metaball Viewer](docs/assets/screenshot.jpg)
+![MetaBall Viewer](docs/assets/screenshot.jpg)
 
 ## 📄 License
 
