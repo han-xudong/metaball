@@ -111,10 +111,10 @@ if __name__ == "__main__":
         "--lr", type=float, default=1e-5, help="Learning rate (default: 1e-5)."
     )
     parser.add_argument(
-        "--batch-size", type=int, default=128, help="Batch size (default: 128)."
+        "--batch_size", type=int, default=128, help="Batch size (default: 128)."
     )
     parser.add_argument(
-        "--max-epochs", type=int, default=2000, help="Max epochs (default: 2000)."
+        "--max_epochs", type=int, default=2000, help="Max epochs (default: 2000)."
     )
     args = parser.parse_args()
 

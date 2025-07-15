@@ -9,7 +9,7 @@ inferring the force and node displacement using the trained model.
 Example usage:
 
 ```bash
-python run_metaball.py --onnx_path <onnx_path>
+python run_metaball.py
 ```
 
 where <onnx_path> is the path to the ONNX model file.
