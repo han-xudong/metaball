@@ -8,8 +8,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-black?logo=open-source-initiative&logoColor=white" /></a>
   <br/>
   <a href="./docs/training.ipynb">⚡Training Guide</a> |
-  <a href="./docs/assembly.md">🛠️Assembly Guide</a> |
-  <a href="./docs/deployment.md">🤖Deployment Guide</a> |
+  <a href="./docs/assembly.md">🤖Assembly Guide</a> |
   <a href="https://github.com/han-xudong/metaball-viewer">🫧Data Viewer</a> |
   <a href="https://a360.co/4ePH4PC">🧩CAD Files</a>
 </p>
@@ -17,7 +16,7 @@
   <img src="docs/assets/banner.jpg" alt="MagiClaw Banner" width="700"/>
 </p>
 
-MetaBall is a soft end-of-robot module capable of vision-based deformable perception. This repository contains the training and testing code for the BallNet model.
+MetaBall is a soft end-of-robot module capable of vision-based deformable perception. It provides a easy and efficient interface for various robot applications.
 
 ## 📦 Installation
 
@@ -50,7 +49,7 @@ where `<ckpt_path>` is the path to the trained model checkpoint. The exported ON
 
 You can also follow the [training guide](./docs/training.ipynb) to test the model by calculating the R2 score, and RMSE, and visualizing the prediction results, etc.
 
-## 🛠️ Hardware
+## 🤖 Hardware
 
 The MetaBall hardware mainly consists of a camera, a controller board, a power board, an LED light board, a soft struture and several 3D-printed parts. The camera is used for capturing images, while the controller board publishes the images through TCP protocol. The power board supports 6-36V input and powers the controller board. The LED light board provides illumination for the camera. The soft struture is made of polyurethane (PU), which is the main part to interact with the environment. 3D-printed parts are used to assemble the camera, controller board, and power board together.
 
@@ -60,7 +59,7 @@ The MetaBall hardware mainly consists of a camera, a controller board, a power b
 
 CAD files of the MetaBall are available on [Fusion](https://a360.co/4ePH4PC). Please refer to the [assembly guide](./docs/assembly.md) for more details on how to assemble the MetaBall.
 
-## 🤖 Deployment
+## 🚀 Deployment
 
 After connecting the MetaBall to the host computer or WiFi and modifying the configuration, you can publish the data by running the following command:
 
