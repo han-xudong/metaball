@@ -51,7 +51,7 @@ The power board and LED light board are designed as FR-4 PCBs. You can use [JLCP
 
 The controller board is [LicheeRV Nano](https://wiki.sipeed.com/hardware/en/lichee/RV_Nano/1_intro.html), a mini-sized development board equipped with the SG2002 processor. The W version of the board supports 2.4G / 5.8G dual-band WiFi6, which is necessary for wireless communication.
 
-You can flash the SD card with [metaball.img]() using [balena Etcher](https://www.balena.io/etcher/). After flashing, insert the SD card into the controller board and connect the board to your computer via USB Type-C cable. You can find the IP address of the board by running the following command:
+You can flash the SD card with [metaball.img]() using [balenaEtcher](https://www.balena.io/etcher/). After flashing, insert the SD card into the controller board and connect the board to your computer via USB Type-C cable. You can find the IP address of the board by running the following command:
 
 ```bash
 arp -a
