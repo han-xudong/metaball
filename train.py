@@ -31,7 +31,9 @@ def main(
         z_coef: coefficient for the latent loss
     """
 
-    with open("./config/training.yaml", "r") as f:
+    # Load the configuration
+    config_path = os.path.join(os.path.dirname(__file__), "configs", "training.yaml")
+    with open(config_path, "r") as f:
         config = yaml.load(f.read(), Loader=yaml.Loader)
     x_dim = config["x_dim"]
     y_dim = config["y_dim"]

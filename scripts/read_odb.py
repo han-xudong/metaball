@@ -110,4 +110,6 @@ for odb_name in odb_names:
     odb.close()
 
     # Print completion message
-    print("{} done".format(odb_name))
+    print("{} completed".format(odb_name))
+
+print("All odb files processed.")
