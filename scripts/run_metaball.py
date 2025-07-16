@@ -26,6 +26,18 @@ from metaball.config import CameraConfig, BallNetConfig, ZMQConfig
 
 
 class Metaball:
+    """
+    Metaball class.
+    
+    This class is used to initialize the metaball, camera, and BallNet model,
+    and to run the metaball by capturing images and inferring the force and node
+    displacement.
+    
+    Attributes:
+        camera (WebCamera): The camera instance.
+        ballnet (BallNet): The BallNet model instance.
+        metaball_publisher (MetaballPublisher): The Metaball publisher instance.
+    """
     def __init__(self) -> None:
         """
         Initialize the metaball.
@@ -34,31 +46,31 @@ class Metaball:
         print("{:=^80}".format(f" Metaball Initialization "))
 
         # Set root directory
-        self.root_dir = pathlib.Path(__file__).parent.parent
+        root_dir = pathlib.Path(__file__).parent.parent
 
         # Load the metaball parameters
-        metaball_config_path = self.root_dir.joinpath("configs", "metaball.yaml")
+        metaball_config_path = root_dir.joinpath("configs", "metaball.yaml")
         with metaball_config_path.open("r") as f:
             metaball_params = yaml.load(f.read(), Loader=yaml.Loader)
 
         # Load the camera parameters
-        self.camera_cfg = CameraConfig()
-        self.camera_cfg.read_config_file(pathlib.Path(metaball_params["camera"]), root_dir=str(self.root_dir))
+        camera_cfg = CameraConfig()
+        camera_cfg.read_config_file(pathlib.Path(metaball_params["camera"]), root_dir=str(root_dir))
 
         # Create a camera
         self.camera = WebCamera(
             name=f"camera",
-            camera_cfg=self.camera_cfg,
+            camera_cfg=camera_cfg,
         )
 
         # Create a BallNet model
-        self.ballnet_cfg = BallNetConfig(model_path=str(self.root_dir.joinpath(pathlib.Path(metaball_params["ballnet"]))))
-        self.ballnet = BallNet(self.ballnet_cfg)
+        ballnet_cfg = BallNetConfig(model_path=str(root_dir.joinpath(pathlib.Path(metaball_params["ballnet"]))))
+        self.ballnet = BallNet(ballnet_cfg)
 
         # Create a metaball publisher
-        self.zmq_cfg = ZMQConfig()
+        zmq_cfg = ZMQConfig()
         self.metaball_publisher = MetaballPublisher(
-            host=self.zmq_cfg.publish_host, port=self.zmq_cfg.publish_port
+            host=zmq_cfg.publish_host, port=zmq_cfg.publish_port
         )
 
     def release(self) -> None:

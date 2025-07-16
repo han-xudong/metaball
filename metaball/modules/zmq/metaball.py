@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
+import re
 import zmq
+import pathlib
 import numpy as np
 from typing import Tuple
 from datetime import datetime
@@ -8,16 +10,31 @@ from metaball.modules.protobuf import metaball_msg_pb2
 
 
 class MetaballPublisher:
+    """
+    MetaballPublisher class.
+
+    This class is used to publish Metaball messages using ZeroMQ.
+
+    Attributes:
+        context (zmq.Context): The ZMQ context for the publisher.
+        publisher (zmq.Socket): The ZMQ publisher socket.
+    """
+
     def __init__(
-        self, host: str, port: int, hwm: int = 1, conflate: bool = True
+        self,
+        host: str,
+        port: int,
+        hwm: int = 1,
+        conflate: bool = True,
     ) -> None:
-        """Publisher initialization.
+        """
+        Publisher initialization.
 
         Args:
             host (str): The host address of the publisher.
             port (int): The port number of the publisher.
-            hwm (int): High water mark for the publisher. Default is 1.
-            conflate (bool): Whether to conflate messages. Default is True.
+            hwm (int, optional): High water mark for the publisher. Default is 1.
+            conflate (bool, optional): Whether to conflate messages. Default is True.
         """
 
         print("{:-^80}".format(" metaball Publisher Initialization "))
@@ -34,18 +51,22 @@ class MetaballPublisher:
         # Bind the address
         self.publisher.bind(f"tcp://{host}:{port}")
 
-        print("Package metaball")
-        print("Message metaball")
-        print(
-            "{\n\tbytes img = 1;\n\trepeated float pose = 2;\n\trepeated float force = 3;\n\trepeated float node = 4;\n}"
-        )
+        # Read the protobuf definition for Metaball message
+        with open(
+            pathlib.Path(__file__).parent.parent / "protobuf/metaball_msg.proto",
+        ) as f:
+            lines = f.read()
+        messages = re.search(r"message\s+Metaball\s*{(.*?)}", lines, re.DOTALL)
+        body = messages.group(1)
+        print("Message Metaball")
+        print("{\n" + body + "\n}")
 
         print("metaball Publisher Initialization Done.")
         print("{:-^80}".format(""))
 
     def publishMessage(
         self,
-        img_bytes: bytes = b"",
+        img: bytes = b"",
         pose: list = np.zeros(6, dtype=np.float32).tolist(),
         force: list = np.zeros(6, dtype=np.float32).tolist(),
         node: list = np.zeros(6, dtype=np.float32).tolist(),
@@ -53,16 +74,16 @@ class MetaballPublisher:
         """Publish the message.
 
         Args:
-            img: The image captured by the camera.
-            pose: The pose of the marker (numpy array or list).
-            force: The force on the bottom surface of the metaball (numpy array or list).
-            node: The node displacement of the metaball (numpy array or list).
+            img (bytes): The image captured by the camera.
+            pose (list): The pose of the marker.
+            force (list): The force on the bottom surface of the metaball.
+            node (list): The node displacement of the metaball.
         """
 
         # Set the message
         metaball = metaball_msg_pb2.Metaball()
         metaball.timestamp = datetime.now().timestamp()
-        metaball.img = img_bytes
+        metaball.img = img
         metaball.pose[:] = pose
         metaball.force[:] = force
         metaball.node[:] = node
@@ -78,26 +99,35 @@ class MetaballPublisher:
             self.context.term()
 
 
-class metaballSubscriber:
+class MetaballSubscriber:
+    """
+    MetaballSubscriber class.
+
+    This class is used to subscribe to Metaball messages using ZeroMQ.
+
+    Attributes:
+        context (zmq.Context): The ZMQ context for the subscriber.
+        subscriber (zmq.Socket): The ZMQ subscriber socket.
+    """
+
     def __init__(
         self,
         host: str,
         port: int,
         hwm: int = 1,
         conflate: bool = True,
-        timeout: int = 100,
     ) -> None:
-        """Subscriber initialization.
+        """
+        Subscriber initialization.
 
         Args:
             host (str): The host address of the subscriber.
             port (int): The port number of the subscriber.
-            hwm (int): High water mark for the subscriber. Default is 1.
-            conflate (bool): Whether to conflate messages. Default is True.
-            timeout (int): Maximum time to wait for a message in milliseconds. Default is 100 ms.
+            hwm (int, optional): High water mark for the subscriber. Default is 1.
+            conflate (bool, optional): Whether to conflate messages. Default is True.
         """
 
-        print("{:-^80}".format(" metaball Subscriber Initialization "))
+        print("{:-^80}".format(" Metaball Subscriber Initialization "))
         print(f"Address: tcp://{host}:{port}")
 
         # Create a ZMQ context
@@ -112,48 +142,36 @@ class metaballSubscriber:
         self.subscriber.connect(f"tcp://{host}:{port}")
         # Subscribe the topic
         self.subscriber.setsockopt_string(zmq.SUBSCRIBE, "")
-        # Set poller
-        self.poller = zmq.Poller()
-        self.poller.register(self.subscriber, zmq.POLLIN)
-        self.timeout = timeout
-        
 
-        print("Package metaball")
-        print("Message metaball")
-        print(
-            "{\n\tbytes img = 1;\n\trepeated float pose = 2;\n\trepeated float force = 3;\n\trepeated float node = 4;\n}"
-        )
+        # Read the protobuf definition for Metaball message
+        with open(
+            pathlib.Path(__file__).parent.parent / "protobuf/metaball_msg.proto",
+        ) as f:
+            lines = f.read()
+        messages = re.search(r"message\s+Metaball\s*{(.*?)}", lines, re.DOTALL)
+        body = messages.group(1)
+        print("Message Metaball")
+        print("{\n" + body + "\n}")
 
-        print("metaball Subscriber Initialization Done.")
+        print("Metaball Subscriber Initialization Done.")
         print("{:-^80}".format(""))
 
     def subscribeMessage(self) -> Tuple[bytes, list, list, list]:
-        """Subscribe the message.
-
-        Args:
-            timeout: Maximum time to wait for a message in milliseconds. Default is 100ms.
+        """
+        Subscribe the message.
 
         Returns:
-            img: The image captured by the camera.
-            pose: The pose of the marker.
-            force: The force on the bottom surface of the metaball.
-            node: The node displacement of the metaball.
-
-        Raises:
-            zmq.ZMQError: If no message is received within the timeout period.
+            data (tuple): metaball data.
+                - img (bytes): The image captured by the camera.
+                - pose (list): The pose of the marker.
+                - force (list): The force on the bottom surface of the metaball.
+                - node (list): The node displacement of the metaball.
         """
 
         # Receive the message
+        metaball = metaball_msg_pb2.Metaball()
+        metaball.ParseFromString(self.subscriber.recv())
 
-        if self.poller.poll(self.timeout):
-            # Receive the message
-            msg = self.subscriber.recv()
-            
-            # Parse the message
-            metaball = metaball_msg_pb2.Metaball()
-            metaball.ParseFromString(msg)
-        else:
-            raise RuntimeError("No message received within the timeout period.")
         return (
             metaball.img,
             metaball.pose,
@@ -162,7 +180,10 @@ class metaballSubscriber:
         )
 
     def close(self):
-        """Close ZMQ socket and context to prevent memory leaks."""
+        """
+        Close ZMQ socket and context to prevent memory leaks.
+        """
+
         if hasattr(self, "subscriber") and self.subscriber:
             self.subscriber.close()
         if hasattr(self, "context") and self.context:

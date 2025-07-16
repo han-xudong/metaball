@@ -3,7 +3,7 @@
 """
 Utility functions for neural networks.
 """
- 
+
 import os
 import onnxruntime as ort
 
@@ -14,7 +14,7 @@ def init_model(model_path: str, device: str = "auto") -> ort.InferenceSession:
 
     Args:
         model_path (str): The path to the ONNX model file.
-        device (str): The device to be used for inference. Options are "auto", "cuda", "hailo", or "cpu".
+        device (str, optional): The device to be used for inference. Options are "auto", "cuda", "hailo", or "cpu".
 
     Returns:
         ort.InferenceSession: The loaded ONNX model.
@@ -30,9 +30,7 @@ def init_model(model_path: str, device: str = "auto") -> ort.InferenceSession:
     sess_options.inter_op_num_threads = 1
     sess_options.log_severity_level = 3
 
-    return ort.InferenceSession(
-        model_path, sess_options, providers=[get_provider(device)]
-    )
+    return ort.InferenceSession(model_path, sess_options, providers=[get_provider(device)])
 
 
 def get_provider(devices: str = "auto") -> str:
@@ -43,8 +41,12 @@ def get_provider(devices: str = "auto") -> str:
     and returns the appropriate provider for ONNX model inference.
     If none of these providers are available, it defaults to CPUExecutionProvider.
 
+    Args:
+        devices (str, optional): The device to be used for inference. Options are "auto", "cuda", "hailo", or "cpu".
+
     Returns:
         provider (str): The provider to be used for ONNX model inference.
+
     Raises:
         ValueError: If the specified device is not supported or available.
     """

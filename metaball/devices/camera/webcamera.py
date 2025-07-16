@@ -23,26 +23,26 @@ class WebCamera:
         mode (str): The mode of the camera, default is "web".
         width (int): The width of the camera image.
         height (int): The height of the camera image.
-        mtx (np.ndarray): The camera matrix.
-        dist (np.ndarray): The camera distortion coefficients.
+        mtx (numpy.ndarray): The camera matrix.
+        dist (numpy.ndarray): The camera distortion coefficients.
         camera (CameraSubscriber): The camera subscriber to get the image.
         detector (cv2.aruco.ArucoDetector): The ArUco detector to detect the markers.
         aruco_estimate_params (cv2.aruco.EstimateParameters): The parameters for estimating the pose of the markers.
         marker_size (float): The size of the ArUco markers in meters.
         marker_num (int): The number of ArUco markers.
-        transfer_tvec (np.ndarray): The translation vector from marker frame to global frame.
-        transfer_rmat (np.ndarray): The rotation matrix from marker frame to global frame.
-        pose (np.ndarray): The current pose of the markers.
+        transfer_tvec (numpy.ndarray): The translation vector from marker frame to global frame.
+        transfer_rmat (numpy.ndarray): The rotation matrix from marker frame to global frame.
+        pose (numpy.ndarray): The current pose of the markers.
         filter_on (bool): Whether to apply pose filtering.
         filter_frame (int): The number of frames to use for pose filtering.
-        last_pose (np.ndarray): The last pose of the markers.
-        img (np.ndarray): The current image from the camera.
+        last_pose (numpy.ndarray): The last pose of the markers.
+        img (numpy.ndarray): The current image from the camera.
         first_frame (bool): Whether this is the first frame.
         clahe (cv2.CLAHE): The Contrast Limited Adaptive Histogram Equalization for image enhancement.
-        sharpen_kernel (np.ndarray): The kernel for sharpening the image.
-        init_pose (np.ndarray): The initial pose of the markers.
-        init_tvec (np.ndarray): The initial translation vector of the markers.
-        init_rvec (np.ndarray): The initial rotation vector of the markers.
+        sharpen_kernel (numpy.ndarray): The kernel for sharpening the image.
+        init_pose (numpy.ndarray): The initial pose of the markers.
+        init_tvec (numpy.ndarray): The initial translation vector of the markers.
+        init_rvec (numpy.ndarray): The initial rotation vector of the markers.
         init_rmat (list): The initial rotation matrices of the markers.
     """
 
@@ -58,7 +58,7 @@ class WebCamera:
         Args:
             name (str): The name of the camera.
             camera_cfg (CameraConfig): The camera configuration.
-            detector_cfg (DetectorConfig): The detector configuration.
+            detector_cfg (DetectorConfig, optional): The detector configuration.
         """
 
         # Camera initialization
@@ -153,11 +153,8 @@ class WebCamera:
 
         After 60 frames, the function will calculate the mean of the pose and return it.
 
-        Args:
-            None
-
         Returns:
-            pose (np.ndarray([n, 6])): The pose vector.
+            pose (numpy.ndarray([n, 6])): The pose vector.
         """
 
         # Create lists to store the tvec and rvec
@@ -188,10 +185,10 @@ class WebCamera:
         Otherwise, the first pose will be popped and the pose will be appended to the pose list.
 
         Args:
-            pose (np.ndarray([n, 6])): The pose vector.
+            pose (numpy.ndarray([n, 6])): The pose vector.
 
         Returns:
-            filtered_pose (np.ndarray([n, 6])): The filtered pose vector.
+            filtered_pose (numpy.ndarray([n, 6])): The filtered pose vector.
         """
 
         # Initialize the pose deque if not already initialized
@@ -231,11 +228,12 @@ class WebCamera:
         Finally, the pose is filtered and the markers are drawn on the image.
 
         Args:
-            img (np.ndarray([height, width, 3])): The image captured by the camera.
+            img (numpy.ndarray([height, width, 3])): The image captured by the camera.
 
         Returns:
-            pose (np.ndarray([n, 6])): The pose vector.
-            img (np.ndarray([height, width, 3])): The image with the markers.
+            data (tuple): processed data.
+                - pose (numpy.ndarray([n, 6])): The pose vector.
+                - img (numpy.ndarray([height, width, 3])): The image with the markers.
         """
 
         # Convert the image to gray
@@ -312,7 +310,7 @@ class WebCamera:
             None
 
         Returns:
-            img (np.ndarray([height, width, 3])): The image captured by the camera.
+            img (numpy.ndarray([height, width, 3])): The image captured by the camera.
 
         Raises:
             ValueError: Cannot read the image from the camera.
@@ -337,8 +335,9 @@ class WebCamera:
         The pose and image are got from the _imageToPose function.
 
         Returns:
-            pose (np.ndarray([n, 6])): The pose vector.
-            img (np.ndarray([height, width, 3])): The image with the markers.
+            data (tuple): read data.
+                - pose (numpy.ndarray([n, 6])): The pose vector.
+                - img (numpy.ndarray([height, width, 3])): The image with the markers.
         """
 
         # Read the image from the camera
@@ -379,10 +378,10 @@ class WebCamera:
         The rvec is the matrix multiplication of the inverse of the initial rvec and the current rvec.
 
         Args:
-            pose (np.ndarray([n, 6])): The pose vector.
+            pose (numpy.ndarray([n, 6])): The pose vector.
 
         Returns:
-            ref_pose (np.ndarray([n, 6])): The reference pose vector.
+            ref_pose (numpy.ndarray([n, 6])): The reference pose vector.
         """
 
         pose = pose.reshape(-1, 6)
@@ -415,10 +414,10 @@ class WebCamera:
         The unit of the euler angles is radian.
 
         Args:
-            pose (np.ndarray([n, 6])): The pose vector.
+            pose (numpy.ndarray([n, 6])): The pose vector.
 
         Returns:
-            pose_euler (np.ndarray([n, 6])): The pose with euler angles.
+            pose_euler (numpy.ndarray([n, 6])): The pose with euler angles.
         """
 
         pose = pose.reshape(-1, 6)
@@ -442,10 +441,10 @@ class WebCamera:
         The quaternion is represented by [x, y, z, qx, qy, qz, qw].
 
         Args:
-            pose (np.ndarray([n, 6])): The pose vector.
+            pose (numpy.ndarray([n, 6])): The pose vector.
 
         Returns:
-            pose_quat (np.ndarray([n, 7])): The pose quaternion.
+            pose_quat (numpy.ndarray([n, 7])): The pose quaternion.
         """
 
         pose = pose.reshape(-1, 6)
@@ -473,10 +472,10 @@ class WebCamera:
          [  0,   0,   0, 1]].
 
         Args:
-            pose (np.ndarray([n, 6])): The pose vector.
+            pose (numpy.ndarray([n, 6])): The pose vector.
 
         Returns:
-            pose_matrix (np.ndarray([n, 4, 4])): The pose matrix.
+            pose_matrix (numpy.ndarray([n, 4, 4])): The pose matrix.
         """
 
         pose = pose.reshape(-1, 6)
@@ -500,10 +499,10 @@ class WebCamera:
         Convert the pose from the marker frame to the global frame.
 
         Args:
-            pose (np.ndarray([n, 6])): The pose vector in the marker frame.
+            pose (numpy.ndarray([n, 6])): The pose vector in the marker frame.
 
         Returns:
-            pose_transfer (np.ndarray([n, 6])): The pose vector in the global frame.
+            pose_transfer (numpy.ndarray([n, 6])): The pose vector in the global frame.
         """
 
         # Reshape the pose to [n, 6]

@@ -11,6 +11,7 @@ from torch.nn import functional as F
 class BallNet(LightningModule):
     """
     BallNet is a PyTorch Lightning model for the Fingerprint dataset.
+    
     It is used for training and evaluation of the model.
     """
 
@@ -28,10 +29,13 @@ class BallNet(LightningModule):
         Initialize the model.
 
         Args:
-            x_dim: dimension of the input data
-            y_dim: dimension of the output data
-            h1_dim: dimension of the hidden layer 1
-            h2_dim: dimension of the hidden layer 2
+            x_dim (list): The input dimension.
+            y_dim (list): The output dimension.
+            h1_dim (list): The first hidden layer dimension.
+            h2_dim (list): The second hidden layer dimension.
+            freeze_dim (list, optional): The dimensions to freeze. Default is [].
+            lr (float, optional): The learning rate. Default is 1e-4.
+            **kwargs: Additional keyword arguments.
         """
 
         # Call the super constructor
@@ -69,10 +73,8 @@ class BallNet(LightningModule):
 
     @staticmethod
     def pretrained_weights_available():
-        """Check if the pretrained weights are available.
-
-        Returns:
-            bool: True if the pretrained weights are available, False otherwise.
+        """
+        Check if the pretrained weights are available.
         """
 
         pass
@@ -82,18 +84,16 @@ class BallNet(LightningModule):
 
         Args:
             checkpoint_name: the name of the checkpoint file.
-
-        Returns:
-            None
         """
 
         pass
     
     def freeze_branch(self, branch_index: int) -> None:
-        """Freeze the branch of the model.
+        """
+        Freeze the branch of the model.
 
         Args:
-            branch_index: the index of the branch to freeze.
+            branch_index (int): the index of the branch to freeze.
         """
 
         # Freeze the branch
@@ -101,10 +101,11 @@ class BallNet(LightningModule):
             param.requires_grad = False
             
     def unfreeze_branch(self, branch_index: int) -> None:
-        """Unfreeze the branch of the model.
+        """
+        Unfreeze the branch of the model.
 
         Args:
-            branch_index: the index of the branch to unfreeze.
+            branch_index (int): the index of the branch to unfreeze.
         """
 
         # Unfreeze the branch
@@ -112,13 +113,14 @@ class BallNet(LightningModule):
             param.requires_grad = True
 
     def forward(self, x: Tensor) -> List[Tensor]:
-        """Forward pass of the model.
+        """
+        Forward pass of the model.
 
         Args:
-            x: the input data.
+            x (Tensor): the input data.
 
         Returns:
-            x_hat_list: the predicted data.
+            x_hat_list (List[Tensor]): the predicted data.
         """
         
         x_hat_list = []
@@ -130,16 +132,15 @@ class BallNet(LightningModule):
         return x_hat_list
 
     def forward_with_index(self, x: Tensor, output_index: int) -> Tensor:
-        """Forward pass of the model with index.
+        """
+        Forward pass of the model with index.
 
         Args:
-            x: the input data.
-            output_index: the index of the output layer.
+            x (Tensor): the input data.
+            output_index (int): the index of the output layer.
 
         Returns:
-            x_recon: the reconstructed data.
-            mu: the mu.
-            std: the std.
+            x_hat (Tensor): the predicted data for the specified output index.
         """
 
         x_hat = getattr(self, f"estimator_{output_index}")(x)
@@ -148,13 +149,14 @@ class BallNet(LightningModule):
         return x_hat
 
     def _prepare_batch(self, batch: Any) -> Tensor:
-        """Prepare the batch.
+        """
+        Prepare the batch.
 
         Args:
-            batch: the input batch.
+            batch (Any): the input batch.
 
         Returns:
-            x: the input batch.
+            x (Tensor): the input batch.
         """
 
         # Reshape the batch
@@ -162,15 +164,17 @@ class BallNet(LightningModule):
         return x.view(x.size(0), -1)
 
     def step(self, batch: Any, batch_idx: int) -> Tuple[Tensor, dict]:
-        """Step the model.
+        """
+        Step the model.
 
         Args:
-            batch: the input batch.
-            batch_idx: the batch index.
+            batch (Any): the input batch.
+            batch_idx (int): the batch index.
 
         Returns:
-            loss: the loss.
-            logs: the logs.
+            results (tuple): step results.
+                - loss (Tensor): the loss.
+                - logs (dict): the logs.
         """
 
         # Prepare the batch
@@ -218,14 +222,15 @@ class BallNet(LightningModule):
         return loss, logs
 
     def training_step(self, batch: Any, batch_idx: int) -> Tensor:
-        """Training step.
+        """
+        Training step.
 
         Args:
-            batch: the input batch.
-            batch_idx: the batch index.
+            batch (Any): the input batch.
+            batch_idx (int): the batch index.
 
         Returns:
-            loss: the loss.
+            loss (Tensor): the loss.
         """
 
         # Run the step
@@ -237,14 +242,15 @@ class BallNet(LightningModule):
         return loss
 
     def validation_step(self, batch: Any, batch_idx: int) -> Tensor:
-        """Validation step.
+        """
+        Validation step.
 
         Args:
-            batch: the input batch.
-            batch_idx: the batch index.
+            batch (Any): the input batch.
+            batch_idx (int): the batch index.
 
         Returns:
-            loss: the loss.
+            loss (Tensor): the loss.
         """
 
         # Run the step
@@ -256,35 +262,32 @@ class BallNet(LightningModule):
         return loss
 
     def test_step(self, batch: Any, batch_idx: int):
-        """Test step.
+        """
+        Test step.
 
         Args:
-            batch: the input batch.
-            batch_idx: the batch index.
-
-        Returns:
-            loss: the loss.
+            batch (Any): the input batch.
+            batch_idx (int): the batch index.
         """
 
         pass
 
     def test_epoch_end(self, outputs: List[Any]):
-        """Test epoch end.
+        """
+        Test epoch end.
 
         Args:
-            outputs: the outputs.
-
-        Returns:
-            None
+            outputs (List[Any]): the outputs.
         """
 
         pass
 
     def configure_optimizers(self) -> torch.optim.Optimizer:
-        """Configure the optimizers.
+        """
+        Configure the optimizers.
 
         Returns:
-            optimizer: the optimizer.
+            optimizer (torch.optim.Optimizer): the optimizer.
         """
         
         # Initialize a list to hold the parameters to optimize
@@ -305,8 +308,9 @@ class BallNet(LightningModule):
         # Return the Adam optimizer configured with the filtered parameters
         return torch.optim.Adam(params, lr=self.lr)
 
-    def export_torchscript(self, path):
-        """Export the model to TorchScript format.
+    def export_torchscript(self, path: str) -> None:
+        """
+        Export the model to TorchScript format.
 
         Args:
             path: the path to save the exported model.
@@ -322,7 +326,7 @@ class BallNet(LightningModule):
 
 if __name__ == "__main__":
     # Create the model
-    model = BallNet(x_dim=[6], y_dim=[6, 1800], h1_dim=[100, 1000], h2_dim=[100, 1000], lr=1e-4)
+    model = BallNet(x_dim=[6], y_dim=[6, 1800], h1_dim=[100, 1000], h2_dim=[100, 1000])
     # Print the model
     print(model)
     # Print the hyperparameters

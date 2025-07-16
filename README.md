@@ -20,10 +20,15 @@ MetaBall is a soft end-of-robot module capable of vision-based deformable percep
 
 ## 📦 Installation
 
-Clone this repository and install the required packages:
+Clone this repository:
 
 ```bash
 git clone https://github.com/han-xudong/metaball.git
+```
+
+It's recommended to create a `conda` environment for this project. Then install the packages:
+
+```bash
 cd metaball
 pip install torch torchvision torchaudio # CPU or CUDA version
 pip install -e .

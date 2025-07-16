@@ -2,6 +2,7 @@
 
 import cv2
 import numpy as np
+from typing import Tuple
 
 # Set the jpeg parameters
 JPEG_PARAMS = [cv2.IMWRITE_JPEG_QUALITY, 50]
@@ -12,7 +13,7 @@ def img_encode(img: np.ndarray) -> bytes:
     Encode the image to JPEG format.
 
     Args:
-        img (np.ndarray): The image to encode.
+        img (numpy.ndarray): The image to encode.
 
     Returns:
         bytes: The encoded image in JPEG format.
@@ -24,7 +25,9 @@ def img_encode(img: np.ndarray) -> bytes:
     return img_encoded.tobytes()
 
 
-def calibrate_camera(images, chess_size=(7, 7), square_size=0.025):
+def calibrate_camera(
+    images: list, chess_size: Tuple[int, int], square_size: float
+) -> Tuple[np.ndarray, np.ndarray, list, list]:
     """
     Find chessboard corners in the images for camera calibration.
 
@@ -34,7 +37,11 @@ def calibrate_camera(images, chess_size=(7, 7), square_size=0.025):
         square_size (float): Size of a square in the chessboard pattern (in mm).
 
     Returns:
-        tuple: Camera matrix, distortion coefficients, rotation vectors, translation vectors.
+        results (tuple): Calibration results.
+            - mtx (numpy.ndarray): Camera matrix.
+            - dist (numpy.ndarray): Distortion coefficients.
+            - rvecs (list): Rotation vectors.
+            - tvecs (list): Translation vectors.
     """
 
     # Prepare object points and image points for calibration

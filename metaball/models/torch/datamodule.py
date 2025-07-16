@@ -3,25 +3,22 @@
 import os
 import numpy as np
 import torch
+from torch import Tensor
 from typing import Optional, Tuple
 from torch.utils.data import DataLoader, Dataset, random_split
 from pytorch_lightning import LightningDataModule
 
 
 class MetaballDataset(Dataset):
-    """Metaball dataset.
-
-    Metaball dataset sample contains:
-        - pose: 6-dim
-        - force: 6-dim
-        - shape: 3n-dim
+    """
+    Metaball dataset.
     """
 
     def __init__(self, data: np.ndarray, transform=None):
         """Initialize the dataset.
 
         Args:
-            data (np.ndarray): The dataset.
+            data (numpy.ndarray): The dataset.
             transform (callable, optional): Optional transform to be applied on a sample.
         """
 
@@ -37,14 +34,14 @@ class MetaballDataset(Dataset):
 
         return len(self.data)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx) -> Tensor:
         """Get the item of the dataset.
 
         Args:
-            idx (int): The index of the item.
+            idx: The index of the item.
 
         Returns:
-            dict: The item of the dataset.
+            data_tensor (torch.Tensor): The item as a tensor.
         """
 
         if torch.is_tensor(idx):
@@ -56,14 +53,8 @@ class MetaballDataset(Dataset):
 
 
 class MetaballDataModule(LightningDataModule):
-    """Metaball data module.
-
-    The dataModule implements 5 key methods:
-        - prepare_data (things to do on 1 GPU/TPU, not on every GPU/TPU in distributed mode)
-        - setup (things to do on every accelerator in distributed mode)
-        - train_dataloader (the training dataloader)
-        - val_dataloader (the validation dataloader)
-        - test_dataloader (the test dataloader)
+    """
+    Metaball data module.
     """
 
     def __init__(
@@ -77,10 +68,11 @@ class MetaballDataModule(LightningDataModule):
         """Initialize the data module.
 
         Args:
-            train_val_split (Tuple[float, float], optional): The train/val split. Defaults to (0.875, 0.125).
+            data_folder (str): The folder containing the dataset.
             batch_size (int, optional): The batch size. Defaults to 128.
             num_workers (int, optional): The number of workers. Defaults to 4.
             pin_memory (bool, optional): Whether to pin memory. Defaults to False.
+            train_val_split (Tuple[float, float], optional): The train/val split. Defaults to (0.875, 0.125).
         """
 
         super().__init__()
@@ -104,7 +96,8 @@ class MetaballDataModule(LightningDataModule):
         pass
 
     def setup(self, stage: Optional[str] = None):
-        """Load data.
+        """
+        Set up the data module.
 
         This method is called by lightning separately when using `trainer.fit()` and `trainer.test()`!
         The `stage` can be used to differentiate whether the `setup()` is called before trainer.fit()` or `trainer.test()`.
@@ -114,7 +107,6 @@ class MetaballDataModule(LightningDataModule):
         """
 
         if not self.data_train or not self.data_val or not self.data_test:
-
             data_path = self.data_folder + "train_data.npy"
             if not os.path.exists(data_path):
                 raise ValueError(f"Data file {data_path} does not exist.")

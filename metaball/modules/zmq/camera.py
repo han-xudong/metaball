@@ -6,6 +6,18 @@ from metaball.modules.protobuf import cam_msg_pb2
 
 
 class CameraSubscriber:
+    """
+    CameraSubscriber class.
+    
+    This class is used to subscribe to camera messages using ZeroMQ.
+    
+    Attributes:
+        context (zmq.Context): The ZMQ context for the subscriber.
+        subscriber (zmq.Socket): The ZMQ subscriber socket.
+        poller (zmq.Poller): The ZMQ poller for handling timeouts.
+        timeout (int): Maximum time to wait for a message in milliseconds.
+    """
+    
     def __init__(
         self,
         host: str,
@@ -19,9 +31,9 @@ class CameraSubscriber:
         Args:
             host (str): The host address of the subscriber.
             port (int): The port number of the subscriber.
-            hwm (int): High water mark for the subscriber. Default is 1.
-            conflate (bool): Whether to conflate messages. Default is True.
-            timeout (int): Maximum time to wait for a message in milliseconds. Default is 1000 ms.
+            hwm (int, optional): High water mark for the subscriber. Default is 1.
+            conflate (bool, optional): Whether to conflate messages. Default is True.
+            timeout (int, optional): Maximum time to wait for a message in milliseconds. Default is 1000 ms.
         """
 
         print(f"Address: tcp://{host}:{port}")
@@ -50,10 +62,8 @@ class CameraSubscriber:
         print("Camera Subscriber Initialization Done.")
 
     def subscribeMessage(self) -> np.ndarray:
-        """Subscribe the message.
-
-        Args:
-            timeout: Maximum time to wait for a message in milliseconds. Default is 2000ms.
+        """
+        Subscribe the message.
 
         Returns:
             img: The image captured by the camera.
@@ -75,7 +85,10 @@ class CameraSubscriber:
             raise RuntimeError("No message received within the timeout period.")
 
     def close(self):
-        """Close ZMQ socket and context to prevent memory leaks."""
+        """
+        Close ZMQ socket and context to prevent memory leaks.
+        """
+        
         if hasattr(self, "subscriber") and self.subscriber:
             try:
                 self.poller.unregister(self.subscriber)

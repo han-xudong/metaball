@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""
+Utility functions for handling data.
+"""
+
 import os
 import numpy as np
 import cv2
@@ -48,9 +52,9 @@ def force_sensor2global(force: np.ndarray, s2g_rmat: np.ndarray, s2g_tvec: np.nd
     Convert the force/torque sensor data from the sensor frame to the global frame.
 
     Args:
-        force (np.ndarray): The force/torque data from the sensor.
-        s2g_rmat (np.ndarray): The rotation matrix from the sensor frame to the global frame.
-        s2g_tvec (np.ndarray): The translation vector from the sensor frame to the global frame.
+        force (numpy.ndarray): The force/torque data from the sensor.
+        s2g_rmat (numpy.ndarray): The rotation matrix from the sensor frame to the global frame.
+        s2g_tvec (numpy.ndarray): The translation vector from the sensor frame to the global frame.
 
     Returns:
         np.ndarray: The converted force/torque data in the global frame.
