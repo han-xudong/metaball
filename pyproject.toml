@@ -37,6 +37,9 @@ dependencies = [
     "trimesh==4.6.8",
 ]
 
+[project.scripts]
+run-metaball = "metaball.cli:run_metaball"
+
 [project.urls]
 "Homepage" = "https://github.com/han-xudong/metaball"
 "Bug Tracker" = "https://github.com/han-xudong/metaball/issues"
