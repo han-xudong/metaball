@@ -32,7 +32,7 @@ def main():
     )
     args = parser.parse_args()
 
-    metaball = Metaball.from_config(args.name)
+    metaball = Metaball(args.name)
     metaball.run()
 
 
