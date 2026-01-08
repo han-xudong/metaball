@@ -10,16 +10,16 @@ from metaball.modules.protobuf import cam_msg_pb2
 class CameraSubscriber:
     """
     CameraSubscriber class.
-    
+
     This class is used to subscribe to camera messages using ZeroMQ.
-    
+
     Attributes:
         context (zmq.Context): The ZMQ context for the subscriber.
         subscriber (zmq.Socket): The ZMQ subscriber socket.
         poller (zmq.Poller): The ZMQ poller for handling timeouts.
         timeout (int): Maximum time to wait for a message in milliseconds.
     """
-    
+
     def __init__(
         self,
         host: str,
@@ -57,12 +57,6 @@ class CameraSubscriber:
         self.poller.register(self.subscriber, zmq.POLLIN)
         self.timeout = timeout
 
-        print("Package Camera")
-        print("Message Camera")
-        print("{\n\tbytes img = 1;\n}")
-
-        print("Camera Subscriber Initialization Done.")
-
     def subscribeMessage(self) -> np.ndarray:
         """
         Subscribe the message.
@@ -77,11 +71,11 @@ class CameraSubscriber:
         if self.poller.poll(self.timeout):
             # Receive the message
             msg = self.subscriber.recv()
-            
+
             # Parse the message
             cam = cam_msg_pb2.Camera()
             cam.ParseFromString(msg)
-            
+
             return np.frombuffer(cam.img, dtype=np.uint8)
         else:
             raise RuntimeError("No message received within the timeout period.")
@@ -90,7 +84,7 @@ class CameraSubscriber:
         """
         Close ZMQ socket and context to prevent memory leaks.
         """
-        
+
         if hasattr(self, "subscriber") and self.subscriber:
             try:
                 self.poller.unregister(self.subscriber)

@@ -2,9 +2,7 @@
 Metaball Publisher and Subscriber using ZeroMQ and Protobuf.
 """
 
-import re
 import zmq
-import pathlib
 import numpy as np
 from typing import Tuple
 from datetime import datetime
@@ -39,7 +37,6 @@ class MetaballPublisher:
             conflate (bool, optional): Whether to conflate messages. Default is True.
         """
 
-        print("{:-^80}".format(" metaball Publisher Initialization "))
         print(f"Address: tcp://{host}:{port}")
 
         # Create a ZMQ context
@@ -52,19 +49,6 @@ class MetaballPublisher:
         self.publisher.setsockopt(zmq.CONFLATE, conflate)
         # Bind the address
         self.publisher.bind(f"tcp://{host}:{port}")
-
-        # Read the protobuf definition for Metaball message
-        with open(
-            pathlib.Path(__file__).parent.parent / "protobuf/metaball_msg.proto",
-        ) as f:
-            lines = f.read()
-        messages = re.search(r"message\s+Metaball\s*{(.*?)}", lines, re.DOTALL)
-        body = messages.group(1)
-        print("Message Metaball")
-        print("{\n" + body + "\n}")
-
-        print("metaball Publisher Initialization Done.")
-        print("{:-^80}".format(""))
 
     def publishMessage(
         self,
@@ -129,7 +113,6 @@ class MetaballSubscriber:
             conflate (bool, optional): Whether to conflate messages. Default is True.
         """
 
-        print("{:-^80}".format(" Metaball Subscriber Initialization "))
         print(f"Address: tcp://{host}:{port}")
 
         # Create a ZMQ context
@@ -144,19 +127,6 @@ class MetaballSubscriber:
         self.subscriber.connect(f"tcp://{host}:{port}")
         # Subscribe the topic
         self.subscriber.setsockopt_string(zmq.SUBSCRIBE, "")
-
-        # Read the protobuf definition for Metaball message
-        with open(
-            pathlib.Path(__file__).parent.parent / "protobuf/metaball_msg.proto",
-        ) as f:
-            lines = f.read()
-        messages = re.search(r"message\s+Metaball\s*{(.*?)}", lines, re.DOTALL)
-        body = messages.group(1)
-        print("Message Metaball")
-        print("{\n" + body + "\n}")
-
-        print("Metaball Subscriber Initialization Done.")
-        print("{:-^80}".format(""))
 
     def subscribeMessage(self) -> Tuple[bytes, list, list, list]:
         """
