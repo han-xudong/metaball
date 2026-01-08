@@ -23,7 +23,7 @@ Various configuration options are available:
 |--data.train-val-split | Train-validation split ratios.                    | tuple  | 0.875 0.125           |
 |--model.name           | Model name                                        | str    | BallNet               |
 |--model.x-dim          | Input dimension                                   | tuple  | 6                     |
-|--model.y-dim          | Output dimension                                  | tuple  | 6 1800                |
+|--model.y-dim          | Output dimension                                  | tuple  | 6 2586                |
 |--model.h1-dim         | Hidden layer 1 dimension                          | tuple  | 128 1024              |
 |--model.h2-dim         | Hidden layer 2 dimension                          | tuple  | 128 1024              |
 ╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯

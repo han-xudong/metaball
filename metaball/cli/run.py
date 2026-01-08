@@ -16,7 +16,7 @@ Various configuration options are available:
 | --host        | Host address for the publisher.               | str    | 127.0.0.1                        |
 | --port        | Port number for the publisher.                | int    | 6666                             |
 | --camera-yaml | Path to the camera configuration YAML file.   | str    | ./configs/maixcam-xxxx.yaml      |
-| --onnx-path   | Path to the ONNX model file.                  | str    | ./models/NeckNet.onnx            |
+| --onnx-path   | Path to the ONNX model file.                  | str    | ./models/BallNet.onnx            |
 ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 """
 
