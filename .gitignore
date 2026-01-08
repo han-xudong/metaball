@@ -219,8 +219,8 @@ __marimo__/
 # recorded data
 data/
 
-# checkpoints
-models/checkpoints/
+# models
+models/
 
 # Pytorch Lightning logs
 lightning_logs/
