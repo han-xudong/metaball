@@ -1,40 +1,32 @@
 """
-Run MetaBall
-========
+MetaBall CLI
 
-This script is to run the MetaBall, capturing metaball's deformation and inferring the force and node
-displacement using the trained model.
-
-Usage
------
+Usage:
 
 To run the MetaBall, use the following command:
 
 ```
-run-metaball --name <metaball_name>
+run-metaball
 ```
 
-Where `<metaball_name>` is the name of the metaball configuration file (without the `.yaml` extension).
+Various configuration options are available:
+╭───────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+| Options       | Description                                   | Type   | Default                          |
+|---------------|-----------------------------------------------|--------|----------------------------------|
+| --host        | Host address for the publisher.               | str    | 127.0.0.1                        |
+| --port        | Port number for the publisher.                | int    | 6666                             |
+| --camera-yaml | Path to the camera configuration YAML file.   | str    | ./configs/maixcam-xxxx.yaml      |
+| --onnx-path   | Path to the ONNX model file.                  | str    | ./models/NeckNet.onnx            |
+╰───────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 """
 
-import argparse
+import tyro
 from metaball import Metaball
+from metaball.configs.deploy import DeployConfig
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run MetaBall")
-    parser.add_argument(
-        "--name",
-        type=str,
-        default="metaball",
-        required=True,
-        help="Name of the metaball configuration file (without .yaml extension)",
-    )
-    args = parser.parse_args()
+    cfg = tyro.cli(DeployConfig)
 
-    metaball = Metaball(args.name)
+    metaball = Metaball(cfg=cfg)
     metaball.run()
-
-
-if __name__ == "__main__":
-    main()

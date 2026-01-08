@@ -5,18 +5,10 @@ Camera Calibration Script
 
 This script captures images from a camera (USB or Web) and saves them for calibration.
 
-Example for USB camera:
+Usage:
 
 ```bash
-python calibrate_camera.py --mode usb --id <id> --width 320 --height 240
-```
-
-where `<id>` is the camera ID which is usually 0 for the first camera, and can also be found in `ls /dev/video*`.
-
-Example for Web camera:
-
-```bash
-python calibrate_camera.py --mode web --host <host> --width 320 --height 240
+python calibrate_camera.py --host <host> --port <port> --width 320 --height 240
 ```
 
 where `<host>` is the host of the camera, which depends on your network configuration.
@@ -45,63 +37,41 @@ import yaml
 import zmq
 import numpy as np
 from metaball.modules.protobuf import cam_msg_pb2
-from metaball.utils.camera_utils import calibrate_camera
+from metaball.utils.camera_utils import calibrate_chessboard
 
 
-def main(name: str, mode: str, id: int, host: str, width: int, height: int) -> None:
+def main(name: str, host: str, port: int, width: int, height: int) -> None:
     """
     Main function to calibrate the camera.
 
     Args:
         name (str): The name of the camera.
-        mode (str): The mode of the camera (usb or web).
-        id (int): The ID of the USB camera.
         host (str): The host of the Web camera.
+        port (int): The port of the Web camera.
         width (int): The width of the image.
         height (int): The height of the image.
     """
 
-    if mode == "usb":
-        # Initialize the USB camera
-        try:
-            camera = cv2.VideoCapture(id)
-        except Exception as e:
-            print(f"\033[31mError initializing camera: {e}\033[0m")
-            print("\033[31mPlease check the camera ID.\033[0m")
-            sys.exit()
-        camera.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
-        camera.set(cv2.CAP_PROP_FRAME_WIDTH, width)
-        camera.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+    # Initialize the Web camera
+    try:
+        context = zmq.Context()
+        socket = context.socket(zmq.SUB)
+        socket.connect(f"tcp://{host}:{port}")
+        socket.setsockopt_string(zmq.SUBSCRIBE, "")
+    except Exception as e:
+        print(f"\033[31mError initializing camera: {e}\033[0m")
+        print("\033[31mPlease check the camera host.\033[0m")
+        sys.exit()
+    cam_msg = cam_msg_pb2.Camera()
+    cam_msg.ParseFromString(socket.recv())
+    img = cv2.imdecode(np.frombuffer(cam_msg.img, dtype=np.uint8), cv2.IMREAD_COLOR)
 
-        # Print camera information
-        print("{:=^80}".format(" USB Camera Initialization "))
-        print(f"ID: {id}")
-        print(f"Width: {width}")
-        print(f"Height: {height}")
-        print("{:=^80}".format(""))
-    elif mode == "web":
-        # Initialize the Web camera
-        try:
-            context = zmq.Context()
-            socket = context.socket(zmq.SUB)
-            socket.connect(f"tcp://{host}:5555")
-            socket.setsockopt_string(zmq.SUBSCRIBE, "")
-        except Exception as e:
-            print(f"\033[31mError initializing camera: {e}\033[0m")
-            print("\033[31mPlease check the camera host.\033[0m")
-            sys.exit()
-        cam_msg = cam_msg_pb2.Camera()
-        cam_msg.ParseFromString(socket.recv())
-        img = cv2.imdecode(np.frombuffer(cam_msg.img, dtype=np.uint8), cv2.IMREAD_COLOR)
-
-        # Print camera information
-        print("{:=^80}".format(" Web Camera Initialization "))
-        print(f"Host: {host}")
-        print(f"Width: {img.shape[1]}")
-        print(f"Height: {img.shape[0]}")
-        print("{:=^80}".format(""))
-    else:
-        raise ValueError("Invalid mode.")
+    # Print camera information
+    print("{:=^80}".format(" Web Camera Initialization "))
+    print(f"Host: {host}")
+    print(f"Width: {img.shape[1]}")
+    print(f"Height: {img.shape[0]}")
+    print("{:=^80}".format(""))
 
     # Create a window to display the camera feed
     cv2.namedWindow(name, cv2.WINDOW_NORMAL)
@@ -110,7 +80,8 @@ def main(name: str, mode: str, id: int, host: str, width: int, height: int) -> N
     # Create a directory to save the images
     img_dir = os.path.join(
         "data",
-        f"camera_calibration/{name.lower().replace(' ', '_')}_{width}x{height}",
+        "camera_calibration",
+        f"{name.lower().replace(' ', '_')}_{width}x{height}",
     )
     os.makedirs(img_dir, exist_ok=True)
 
@@ -120,11 +91,8 @@ def main(name: str, mode: str, id: int, host: str, width: int, height: int) -> N
     count = 0
     while True:
         # Read the frame from the camera
-        if mode == "usb":
-            ret, img = camera.read()
-        elif mode == "web":
-            cam_msg.ParseFromString(socket.recv())
-            img = cv2.imdecode(np.frombuffer(cam_msg.img, dtype=np.uint8), cv2.IMREAD_COLOR)
+        cam_msg.ParseFromString(socket.recv())
+        img = cv2.imdecode(np.frombuffer(cam_msg.img, dtype=np.uint8), cv2.IMREAD_COLOR)
 
         # Display the frame
         cv2.imshow(name, img)
@@ -142,11 +110,8 @@ def main(name: str, mode: str, id: int, host: str, width: int, height: int) -> N
             count += 1
 
     # Close the camera
-    if mode == "usb":
-        camera.release()
-    elif mode == "web":
-        socket.close()
-        context.term()
+    socket.close()
+    context.term()
 
     # Close the OpenCV window
     cv2.destroyAllWindows()
@@ -179,7 +144,7 @@ def main(name: str, mode: str, id: int, host: str, width: int, height: int) -> N
 
         # Find chessboard corners in the images
         print("Finding chessboard corners...")
-        mtx, dist, rvecs, tvecs = calibrate_camera(images, chess_size=chess_size, square_size=square_size)
+        mtx, dist, rvecs, tvecs = calibrate_chessboard(images, chess_size=chess_size, square_size=square_size)
 
         # Print the calibration results
         print("Camera matrix:")
@@ -220,22 +185,16 @@ if __name__ == "__main__":
         help="The name of the camera.",
     )
     parser.add_argument(
-        "--mode",
-        type=str,
-        default="web",
-        help="The camera mode (usb or web).",
-    )
-    parser.add_argument(
-        "--id",
-        type=int,
-        default=0,
-        help="The ID of the USB camera.",
-    )
-    parser.add_argument(
         "--host",
         type=str,
         default="10.114.201.1",
         help="The host of the Web camera.",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=5555,
+        help="The port of the Web camera.",
     )
     parser.add_argument(
         "--width",
@@ -251,5 +210,5 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(args.name, args.mode, args.id, args.host, args.width, args.height)
+    main(args.name, args.host, args.port, args.width, args.height)
     print("Camera calibration script finished.")

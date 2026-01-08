@@ -13,7 +13,7 @@
   <a href="https://a360.co/4ePH4PC">🧩CAD Files</a>
 </p>
 <p align="center">
-  <img src="docs/assets/banner.jpg" alt="MagiClaw Banner" width="700"/>
+  <img src="docs/assets/banner.jpg" alt="MetaBall Banner" width="700"/>
 </p>
 
 MetaBall is a soft end-of-robot module capable of vision-based deformable perception. It provides a easy and efficient interface for various robot applications.

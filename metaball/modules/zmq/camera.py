@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+"""
+Camera Subscriber using ZeroMQ and Protobuf.
+"""
 
 import zmq
 import numpy as np

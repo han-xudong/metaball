@@ -9,7 +9,7 @@ The model is implemented in PyTorch and exported to ONNX format for inference.
 
 Example usage:
 ```bash
-python ballnet.py --name BallNet --model_path ./models/BallNet.onnx
+python ballnet.py --onnx_path ./models/BallNet.onnx
 ```
 
 For more information, please refer to https://github.com/han-xudong/metaball
@@ -19,7 +19,6 @@ import argparse
 from typing import Tuple
 import numpy as np
 from metaball.utils.nn_utils import init_model
-from metaball.config import BallNetConfig
 
 
 class BallNet:
@@ -28,27 +27,19 @@ class BallNet:
 
     This class is used to load the BallNet model and perform inference.
     The model is loaded using ONNX Runtime.
-
-    Attributes:
-        name (str): The name of the model.
-        model_path (str): The path to the model file.
     """
 
-    def __init__(self, ballnet_cfg: BallNetConfig) -> None:
+    def __init__(self, onnx_path: str) -> None:
         """
         BallNet initialization.
 
         Args:
-            ballnet_cfg (BallNetConfig): The configuration for the BallNet model.
+            onnx_path (str): The path to the ONNX model file.
         """
-
-        # Set the name and model path
-        self.name = ballnet_cfg.name
-        self.model_path = ballnet_cfg.model_path
 
         # Create a ONNX runtime model
         try:
-            self.model = init_model(self.model_path, ballnet_cfg.device)
+            self.model = init_model(onnx_path)
         except Exception as e:
             raise ValueError(f"Failed to load the model: {e}")
 
@@ -67,7 +58,8 @@ class BallNet:
         print("{:-^80}".format(""))
 
     def infer(self, motion: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """Inference.
+        """
+        Inference.
 
         Args:
             motion (numpy.ndarray): The motion of the Ball.
@@ -82,23 +74,14 @@ class BallNet:
 
 
 if __name__ == "__main__":
-    # Parse the arguments
-    parser = argparse.ArgumentParser(description="BallNet inference.")
+    parser = argparse.ArgumentParser(description="BallNet Inference")
     parser.add_argument(
-        "--name",
-        type=str,
-        default="BallNet",
-        help="The name of the model.",
-    )
-    parser.add_argument(
-        "--model_path",
+        "--onnx_path",
         type=str,
         default="./models/BallNet.onnx",
-        help="The path of the model.",
+        help="Path to the ONNX model file.",
     )
     args = parser.parse_args()
 
-    # Initialize the BallNet
-    ballnet_cfg = BallNetConfig(name=args.name, model_path=args.model_path)
-
-    ballnet = BallNet(ballnet_cfg)
+    # Create a BallNet model
+    ballnet = BallNet(onnx_path=args.onnx_path)

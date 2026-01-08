@@ -4,11 +4,12 @@ import argparse
 import time
 import cv2
 import numpy as np
+import yaml
 from typing import Tuple
 from collections import deque
 from scipy.spatial.transform import Rotation as R
 from metaball.modules.zmq import CameraSubscriber
-from metaball.config import CameraConfig, DetectorConfig
+from metaball.configs.deploy import CameraConfig, DetectorConfig
 
 
 class WebCamera:
@@ -17,38 +18,10 @@ class WebCamera:
 
     The class is to get the image from a web camera and detect the ArUco markers.
     The poses of the markers are estimated and filtered.
-    
-    Attributes:
-        name (str): The name of the camera.
-        mode (str): The mode of the camera, default is "web".
-        width (int): The width of the camera image.
-        height (int): The height of the camera image.
-        mtx (numpy.ndarray): The camera matrix.
-        dist (numpy.ndarray): The camera distortion coefficients.
-        camera (CameraSubscriber): The camera subscriber to get the image.
-        detector (cv2.aruco.ArucoDetector): The ArUco detector to detect the markers.
-        aruco_estimate_params (cv2.aruco.EstimateParameters): The parameters for estimating the pose of the markers.
-        marker_size (float): The size of the ArUco markers in meters.
-        marker_num (int): The number of ArUco markers.
-        transfer_tvec (numpy.ndarray): The translation vector from marker frame to global frame.
-        transfer_rmat (numpy.ndarray): The rotation matrix from marker frame to global frame.
-        pose (numpy.ndarray): The current pose of the markers.
-        filter_on (bool): Whether to apply pose filtering.
-        filter_frame (int): The number of frames to use for pose filtering.
-        last_pose (numpy.ndarray): The last pose of the markers.
-        img (numpy.ndarray): The current image from the camera.
-        first_frame (bool): Whether this is the first frame.
-        clahe (cv2.CLAHE): The Contrast Limited Adaptive Histogram Equalization for image enhancement.
-        sharpen_kernel (numpy.ndarray): The kernel for sharpening the image.
-        init_pose (numpy.ndarray): The initial pose of the markers.
-        init_tvec (numpy.ndarray): The initial translation vector of the markers.
-        init_rvec (numpy.ndarray): The initial rotation vector of the markers.
-        init_rmat (list): The initial rotation matrices of the markers.
     """
 
     def __init__(
         self,
-        name: str,
         camera_cfg: CameraConfig,
         detector_cfg: DetectorConfig = DetectorConfig(),
     ) -> None:
@@ -61,12 +34,7 @@ class WebCamera:
             detector_cfg (DetectorConfig, optional): The detector configuration.
         """
 
-        # Camera initialization
-        self.name = name
-        print("{:-^80}".format(f" {self.name} Initialization "))
         # Set the camera parameters
-        self.mode = "web"
-        print(f"Camera mode: {self.mode.upper()}")
         self.width = camera_cfg.width
         self.height = camera_cfg.height
         self.mtx = np.array(camera_cfg.mtx)
@@ -79,42 +47,34 @@ class WebCamera:
         print(f"Resolution: {self.width}x{self.height}")
         print(f"Camera matrix:\n{self.mtx}")
         print(f"Camera distortion:\n{self.dist}")
-        print("Camera Initialization Done.")
-        print("{:-^80}".format(""))
 
-        # ArUco detector initialization
-        print("{:-^80}".format(" ArUco Detector Initialization "))
         # Set the detector parameters
         aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
         aruco_detector_params = cv2.aruco.DetectorParameters()
-        for attr, value in vars(detector_cfg).items():
-            if hasattr(aruco_detector_params, attr):
-                # Set the attribute if it exists in the DetectorParameters
-                if isinstance(value, (int, float, bool)):
-                    aruco_detector_params.__setattr__(attr, value)
-                elif isinstance(value, list):
-                    # Convert list to numpy array if needed
-                    aruco_detector_params.__setattr__(attr, np.array(value))
-            else:
-                # If the attribute does not exist, skip setting it
-                continue
+        if detector_cfg is not None:
+            for v in vars(detector_cfg):
+                if hasattr(aruco_detector_params, v):
+                    setattr(aruco_detector_params, v, getattr(detector_cfg, v))
         self.detector = cv2.aruco.ArucoDetector(aruco_dict, aruco_detector_params)
         self.aruco_estimate_params = cv2.aruco.EstimateParameters()
         self.aruco_estimate_params.solvePnPMethod = cv2.SOLVEPNP_IPPE_SQUARE
+        
         # Set the marker size
         self.marker_size = camera_cfg.marker_size
         self.marker_num = camera_cfg.marker_num
         print(f"Marker size: {self.marker_size}")
+        
         # Set the translation and rotation from marker frame to global frame
         self.transfer_tvec = np.array(camera_cfg.marker2global_tvec)
         self.transfer_rmat = np.array(camera_cfg.marker2global_rmat)
+        
         # Set the pose
         self.pose = np.zeros([self.marker_num, 6])
+        
         # Set the clahe
         self.clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(4, 4))
         # Set the sharpen kernel
         self.sharpen_kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-        # self.sharpen_kernel = np.ones((5, 5), np.float32) / 25
 
         # Set the filter parameters
         self.filter_on = camera_cfg.filter_on
@@ -122,30 +82,24 @@ class WebCamera:
         print(f"Pose Filter: {self.filter_on}")
         if self.filter_on:
             print(f"Filter frame: {self.filter_frame}")
-        self.last_pose = np.zeros(6)
+        self.last_pose = np.zeros([self.marker_num, 6])
         self.img = np.zeros((self.height, self.width, 3))
         self.first_frame = True
 
         # Check if the camera is connected
         while not self._is_connected():
             print(
-                f"Camera {self.name}: not connected. Retrying in 1 second..."
+                f"Camera not connected. Retrying in 1 second..."
             )
             time.sleep(1)
         
         # Init pose
-        print(f"Calculating the initial pose of {self.name} ...")
+        print(f"Calculating the initial pose ...")
         self.init_pose = self._calculateInitPose()
         self.init_tvec = self.init_pose[:, :3]
         self.init_rvec = self.init_pose[:, 3:]
         self.init_rmat = [R.from_rotvec(rvec).as_matrix() for rvec in self.init_rvec]
-
         print(f"Initial pose: {self.init_pose}")
-        print(
-            f"The finger motion will be calculated as reference pose base on this initial pose."
-        )
-        print("ArUco Detector Initialization Done.")
-        print("{:-^80}".format(""))
 
     def _calculateInitPose(self) -> np.ndarray:
         """
@@ -529,12 +483,6 @@ if __name__ == "__main__":
     # Parse the arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--name",
-        type=str,
-        default="Web Camera",
-        help="The name of the camera.",
-    )
-    parser.add_argument(
         "--params_path",
         type=str,
         help="The path of the camera parameters.",
@@ -545,15 +493,15 @@ if __name__ == "__main__":
         help="Show the image captured by the camera (default: False).",
     )
     args = parser.parse_args()
+    
+    # Read the camera parameters
+    with open(args.params_path, "r") as f:
+        camera_params = yaml.load(f.read(), Loader=yaml.Loader)
+    camera_cfg = CameraConfig(**camera_params)
 
     try:
-        # Create a camera
-        camera_cfg = CameraConfig()
-        camera_cfg.read_config_file(args.params_path)
-        camera = WebCamera(
-            name=args.name,
-            camera_cfg=camera_cfg,
-        )
+        
+        camera = WebCamera(camera_cfg)
         show_img = args.show_img
 
         frame_count = 0
@@ -578,7 +526,7 @@ if __name__ == "__main__":
 
             if show_img:
                 # Show the image
-                cv2.imshow("Camera_0", frame)
+                cv2.imshow("Camera", frame)
 
                 # Break the loop
                 if cv2.waitKey(10) == 27:

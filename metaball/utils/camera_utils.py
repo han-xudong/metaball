@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+"""
+Utility functions for camera operations.
+"""
 
 import cv2
 import numpy as np
@@ -25,7 +27,7 @@ def img_encode(img: np.ndarray) -> bytes:
     return img_encoded.tobytes()
 
 
-def calibrate_camera(
+def calibrate_chessboard(
     images: list, chess_size: Tuple[int, int], square_size: float
 ) -> Tuple[np.ndarray, np.ndarray, list, list]:
     """

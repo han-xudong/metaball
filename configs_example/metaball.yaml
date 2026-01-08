@@ -1,2 +1,0 @@
-camera: configs/camera.yaml
-ballnet: models/BallNet.onnx

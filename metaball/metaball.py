@@ -1,28 +1,15 @@
-#!/usr/bin/env python
-
 """
-Metaball
-
-This script is to run the Metaball, capturing metaball's deformation and
-inferring the force and node displacement using the trained model.
-
-Example usage:
-
-```bash
-python run_metaball.py
-```
-
-where <onnx_path> is the path to the ONNX model file.
+Metaball Class.
 """
 
-import pathlib
+
 import time
 import cv2
 import yaml
 from metaball.devices.camera import WebCamera
 from metaball.modules.zmq import MetaballPublisher
 from metaball.models.onnx.ballnet import BallNet
-from metaball.config import CameraConfig, BallNetConfig, ZMQConfig
+from metaball.configs.deploy import CameraConfig, DeployConfig
 
 
 class Metaball:
@@ -39,27 +26,19 @@ class Metaball:
         metaball_publisher (MetaballPublisher): The Metaball publisher instance.
     """
 
-    def __init__(self, name: str) -> None:
+    def __init__(self, cfg: DeployConfig) -> None:
         """
         Initialize the metaball.
 
         Args:
-            name (str): The name of the metaball instance.
+            cfg (DeployConfig): The deployment configuration.
         """
 
-        print("{:=^80}".format(f" Metaball Initialization "))
-
-        # Set root directory
-        root_dir = pathlib.Path(__file__).parent.parent
-
         # Load the metaball parameters
-        metaball_config_path = root_dir.joinpath("configs", f"{name}.yaml")
-        with metaball_config_path.open("r") as f:
-            metaball_params = yaml.load(f.read(), Loader=yaml.Loader)
+        with open(cfg.camera_yaml, "r") as f:
+            camera_params_dict = yaml.safe_load(f)
 
-        # Load the camera parameters
-        camera_cfg = CameraConfig()
-        camera_cfg.read_config_file(pathlib.Path(metaball_params["camera"]), root_dir=str(root_dir))
+        camera_cfg = CameraConfig(**camera_params_dict)
 
         # Create a camera
         self.camera = WebCamera(
@@ -68,14 +47,10 @@ class Metaball:
         )
 
         # Create a BallNet model
-        ballnet_cfg = BallNetConfig(
-            model_path=str(root_dir.joinpath(pathlib.Path(metaball_params["ballnet"])))
-        )
-        self.ballnet = BallNet(ballnet_cfg)
+        self.ballnet = BallNet(cfg.onnx_path)
 
         # Create a metaball publisher
-        zmq_cfg = ZMQConfig()
-        self.metaball_publisher = MetaballPublisher(host=zmq_cfg.publish_host, port=zmq_cfg.publish_port)
+        self.metaball_publisher = MetaballPublisher(host=cfg.host, port=cfg.port)
 
     def release(self) -> None:
         """

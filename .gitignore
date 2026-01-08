@@ -225,9 +225,10 @@ models/checkpoints/
 # Pytorch Lightning logs
 lightning_logs/
 
-# Config files
-configs/
-
 # Abaqus
-abaqus.rpy*
+*.rpy*
 *.jnl
+abaqus.*
+
+# uv
+uv.lock

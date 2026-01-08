@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-
-# Copyright 2025 The DLRG team. All rights reserved.
+# Copyright 2025 Xudong Han. All rights reserved.
 # Licensed under the MIT License.
 # You may not use this file except in compliance with the License.
 # You may obtain a copy of the License at

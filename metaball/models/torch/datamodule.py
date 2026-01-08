@@ -1,4 +1,30 @@
-#!/usr/bin/env python
+"""
+Metaball DataModule.
+
+This module implements the Metaball DataModule for PyTorch Lightning.
+It provides data loading and preprocessing functionalities for training
+and validation of the Metaball model.
+
+Usage:
+
+```python
+from metaball.models import MetaBallDataModule
+datamodule = MetaballDataModule(
+    dataset_path=<dataset_path>,
+    batch_size=<batch_size>,
+    num_workers=<num_workers>,
+    pin_memory=<pin_memory>,
+    train_val_split=<train_val_split>,
+)
+datamodule.setup()
+```
+
+where `<dataset_path>` is the path to the dataset, `<batch_size>` is the batch size,
+`<num_workers>` is the number of workers for data loading, `<pin_memory>` is a boolean
+indicating whether to pin memory, and `<train_val_split>` is a tuple indicating the
+train/validation split ratios.
+"""
+
 
 import os
 import numpy as np
@@ -15,7 +41,8 @@ class MetaballDataset(Dataset):
     """
 
     def __init__(self, data: np.ndarray, transform=None):
-        """Initialize the dataset.
+        """
+        Initialize the dataset.
 
         Args:
             data (numpy.ndarray): The dataset.
@@ -26,7 +53,8 @@ class MetaballDataset(Dataset):
         self.transform = transform
 
     def __len__(self):
-        """Get the length of the dataset.
+        """
+        Get the length of the dataset.
 
         Returns:
             int: The length of the dataset.
@@ -35,7 +63,8 @@ class MetaballDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx) -> Tensor:
-        """Get the item of the dataset.
+        """
+        Get the item of the dataset.
 
         Args:
             idx: The index of the item.
@@ -64,8 +93,9 @@ class MetaballDataModule(LightningDataModule):
         num_workers: int = 4,
         pin_memory: bool = False,
         train_val_split: Tuple[float, float] = (0.875, 0.125),
-    ):
-        """Initialize the data module.
+    ) -> None:
+        """
+        Initialize the data module.
 
         Args:
             data_folder (str): The folder containing the dataset.
@@ -87,25 +117,9 @@ class MetaballDataModule(LightningDataModule):
         self.data_test: Optional[Dataset] = None
 
     def prepare_data(self):
-        """Download data if needed.
-
-        This method is called only from a single GPU.
-        Do not use it to assign state (self.x = y).
-        """
-
         pass
 
     def setup(self, stage: Optional[str] = None):
-        """
-        Set up the data module.
-
-        This method is called by lightning separately when using `trainer.fit()` and `trainer.test()`!
-        The `stage` can be used to differentiate whether the `setup()` is called before trainer.fit()` or `trainer.test()`.
-
-        Args:
-            stage (Optional[str], optional): The stage. Defaults to None.
-        """
-
         if not self.data_train or not self.data_val or not self.data_test:
             data_path = self.data_folder + "train_data.npy"
             if not os.path.exists(data_path):

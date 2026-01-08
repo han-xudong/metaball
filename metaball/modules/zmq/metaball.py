@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+"""
+Metaball Publisher and Subscriber using ZeroMQ and Protobuf.
+"""
 
 import re
 import zmq
