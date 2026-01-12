@@ -78,7 +78,7 @@ CAD files of the MetaBall are available on [Fusion](https://a360.co/4ePH4PC). Pl
 After connecting the Omni-Neck to the computer and modifying the configuration, you can deploy it by running the following command:
 
 ```bash
-uv run python scripts/deploy.py
+uv run metaball [options]
 ```
 
 Various configuration options are available:
