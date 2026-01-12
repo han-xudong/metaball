@@ -90,7 +90,7 @@ Various configuration options are available:
 | --camera-yaml | Path to the camera configuration YAML file.   | str    | ./configs/maixcam-xxxx.yaml      |
 | --onnx-path   | Path to the ONNX model file.                  | str    | ./models/BallNet.onnx            |
 
-All data can be visualized through the [MetaBall Viewer](https://github.com/han-xudong/metaball-viewer).
+All data, including images, poses, forces, and node displacements, will be published through TCP (ZeroMQ), and can be visualized through the [MetaBall Viewer](https://github.com/han-xudong/metaball-viewer).
 
 ![MetaBall Viewer](docs/assets/screenshot.jpg)
 

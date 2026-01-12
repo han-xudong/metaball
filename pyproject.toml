@@ -41,7 +41,7 @@ dependencies = [
 ]
 
 [project.scripts]
-run-metaball = "metaball.cli:run_metaball"
+metaball = "metaball.cli:metaball"
 
 [project.urls]
 "Homepage" = "https://github.com/han-xudong/metaball"

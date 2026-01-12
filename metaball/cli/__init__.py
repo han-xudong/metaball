@@ -17,4 +17,4 @@ run-metaball --name <metaball_name>
 Where `<metaball_name>` is the name of the metaball configuration file (without the `.yaml` extension).
 """
 
-from .run import main as run_metaball
+from .run import main as metaball
