@@ -16,7 +16,7 @@
   <img src="docs/assets/banner.jpg" alt="MetaBall Banner" width="700"/>
 </p>
 
-MetaBall is a soft end-of-robot module capable of vision-based deformable perception. It is designed to provide a wide range of motion and sensing capabilities, making it suitable for various applications in robotics, including manipulation, exploration, and human-robot interaction. MetaBall is part of the [Proprioceptive Soft Robot (ProSoRo)](https://prosoro.github.io) family.
+MetaBall is a soft end-of-robot module capable of vision-based deformable perception. It is designed to provide a wide range of motion and sensing capabilities, making it suitable for various applications in robotics, including manipulation, exploration, and human-robot interaction. MetaBall is part of the [Proprioceptive Soft Robotic Modules (ProSoRo)](https://prosoro.github.io) family.
 
 ## 📦 Installation
 
