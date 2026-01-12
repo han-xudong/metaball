@@ -44,8 +44,7 @@ class BallNet:
             raise ValueError(f"Failed to load the model: {e}")
 
         # Print the initialization message
-        print("{:-^80}".format(f" {self.name} Initialization "))
-        print("Model Path:", self.model_path)
+        print("Model Path:", onnx_path)
         print(
             "Input:",
             [f"{input.name} ({input.shape[0]}, {input.shape[1]})" for input in self.model.get_inputs()],
@@ -54,8 +53,6 @@ class BallNet:
             "Output:",
             [f"{output.name} ({output.shape[0]}, {output.shape[1]})" for output in self.model.get_outputs()],
         )
-        print("Model Initialization Done.")
-        print("{:-^80}".format(""))
 
     def infer(self, motion: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """

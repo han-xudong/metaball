@@ -3,7 +3,7 @@
 """
 Export ONNX Model
 
-This script is to export the trained BallNet model to ONNX format.
+This script is to export the trained model to ONNX format.
 
 Example usage:
 
@@ -11,7 +11,7 @@ Example usage:
 python export_onnx.py --ckpt_dir <ckpt_dir>
 ```
 
-where <ckpt_dir> is the directory to the checkpoint folder.
+where <ckpt_dir> is the path to the checkpoint folder.
 """
 
 import argparse
@@ -23,9 +23,9 @@ import onnx
 from metaball.models.torch.ballnet import BallNet
 
 
-class DropBallNet(BallNet):
+class BallNetRuntime(BallNet):
     """
-    DropBallNet is a BallNet model with dropped inputs.
+    BallNetRuntime is a BallNet model for runtime inference.
 
     It is used for ONNX export and real-world deployment.
 
@@ -47,7 +47,6 @@ class DropBallNet(BallNet):
             y_dim (list): dimension of the output data.
             h1_dim (list): dimension of the hidden layer 1.
             h2_dim (list): dimension of the hidden layer 2.
-            **kwargs: additional keyword arguments.
         """
 
         # Call the super constructor
@@ -66,30 +65,28 @@ class DropBallNet(BallNet):
 
         outputs = []
         for i in range(len(self.y_dim)):
-            # Get the estimator for the i-th output
-            estimator = getattr(self, f"estimator_{i}")
-            y = estimator(x)
+            y = getattr(self, f"estimator_{i}")(x)
             outputs.append(y)
+
         return outputs
 
 
 def onnx_export(ckpt_dir: str) -> None:
     """
-    Export the BallNet model to ONNX format.
+    Export the trained model to ONNX format.
 
     Args:
-        ckpt_dir (str): Directory containing the model checkpoint.
+        ckpt_dir (str): Path to the checkpoint folder.
     """
 
+    model_name = "_".join(ckpt_dir.split("/")[1:-1])
+    print(f"Exporting {model_name} model to ONNX format")
+
+    ckpt_path = os.path.join(ckpt_dir, "checkpoints", os.listdir(os.path.join(ckpt_dir, "checkpoints"))[0])
     # Load the model
     device = torch.device("cpu")
-    model = DropBallNet.load_from_checkpoint(
-        os.path.join(ckpt_dir, "checkpoints", os.listdir(ckpt_dir + "checkpoints")[0]),
-    ).to(device)
+    model = BallNetRuntime.load_from_checkpoint(ckpt_path).to(device)
     model.eval()
-
-    model_name = ckpt_dir.split("/")[-2]  # Extract model name from the path
-    print(f"Exporting {model_name} model to ONNX format...")
 
     # Get input dimension from the model
     input_dim = model.x_dim[0]  # Use the first input dimension
@@ -122,7 +119,6 @@ def onnx_export(ckpt_dir: str) -> None:
         shape = [dim.dim_value for dim in input_tensor.type.tensor_type.shape.dim]
         dtype = input_tensor.type.tensor_type.elem_type
         print(f"Name: {name}, Shape: {shape}, Type: {dtype}")
-
     print("\n=== Model Outputs ===")
     for output_tensor in onnx_model.graph.output:
         name = output_tensor.name

@@ -65,8 +65,10 @@ class WebCamera:
         print(f"Marker size: {self.marker_size}")
         
         # Set the translation and rotation from marker frame to global frame
-        self.transfer_tvec = np.array(camera_cfg.marker2global_tvec)
-        self.transfer_rmat = np.array(camera_cfg.marker2global_rmat)
+        self.transfer_tvec = np.array(camera_cfg.transfer_tvec)
+        self.transfer_rmat = np.array(camera_cfg.transfer_rmat)
+        print(f"Transfer tvec:\n{self.transfer_tvec}")
+        print(f"Transfer rmat:\n{self.transfer_rmat}")
         
         # Set the pose
         self.pose = np.zeros([self.marker_num, 6])

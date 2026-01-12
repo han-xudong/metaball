@@ -41,10 +41,7 @@ class Metaball:
         camera_cfg = CameraConfig(**camera_params_dict)
 
         # Create a camera
-        self.camera = WebCamera(
-            name=f"camera",
-            camera_cfg=camera_cfg,
-        )
+        self.camera = WebCamera(camera_cfg)
 
         # Create a BallNet model
         self.ballnet = BallNet(cfg.onnx_path)

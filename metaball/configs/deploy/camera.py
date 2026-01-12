@@ -45,12 +45,18 @@ class CameraConfig:
     marker_num: int = 1
     """Number of markers."""
 
-    transfer_tvec: Tuple[Tuple[float, ...], ...] = ((0.0, 0.0, -25.0),)
+    transfer_tvec: Tuple[Tuple[Tuple[float, ...], ...], ...] = (
+        (
+            (0.0, 0.0, -25.0),
+        ),
+    )
     """Translation vector from marker to camera frame in mm."""
 
-    transfer_rmat: Tuple[Tuple[Tuple[float, ...], ...], ...] = (
-        (1.0, 0.0, 0.0),
-        (0.0, -1.0, 0.0),
-        (0.0, 0.0, -1.0),
+    transfer_rmat: Tuple[Tuple[Tuple[Tuple[float, ...], ...], ...], ...] = (
+        (
+            (1.0, 0.0, 0.0),
+            (0.0, -1.0, 0.0),
+            (0.0, 0.0, -1.0),
+        ),
     )
     """Rotation matrix from marker to camera frame."""

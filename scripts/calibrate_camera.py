@@ -25,8 +25,6 @@ A MATLAB script is also provided in the `scripts` directory for saving the camer
 distortion coefficients into a `.yaml` file.
 
 The calibration results should be copied to the `config/camera` directory for further use.
-
-For more information, please refer to https://github.com/asMagiClaw/meta-finger
 """
 
 import argparse

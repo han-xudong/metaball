@@ -16,5 +16,5 @@ class DeployConfig:
     camera_yaml: str = "./configs/maixcam-xxxx.yaml"
     """Path to the camera configuration YAML file."""
 
-    onnx_path: str = "./models/NeckNet.onnx"
+    onnx_path: str = "./models/BallNet.onnx"
     """Path to the ONNX model file."""

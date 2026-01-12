@@ -6,21 +6,21 @@ import os
 import onnxruntime as ort
 
 
-def init_model(model_path: str, device: str = "auto") -> ort.InferenceSession:
+def init_model(onnx_path: str, device: str = "auto") -> ort.InferenceSession:
     """
     Initialize an ONNX model.
 
     Args:
-        model_path (str): The path to the ONNX model file.
+        onnx_path (str): The path to the ONNX model file.
         device (str, optional): The device to be used for inference. Options are "auto", "cuda", "hailo", or "cpu".
 
     Returns:
         ort.InferenceSession: The loaded ONNX model.
     """
 
-    if not model_path.endswith(".onnx"):
+    if not onnx_path.endswith(".onnx"):
         raise ValueError("The model path must end with .onnx.")
-    if not os.path.exists(model_path):
+    if not os.path.exists(onnx_path):
         raise ValueError("The model path does not exist.")
 
     sess_options = ort.SessionOptions()
@@ -28,7 +28,7 @@ def init_model(model_path: str, device: str = "auto") -> ort.InferenceSession:
     sess_options.inter_op_num_threads = 1
     sess_options.log_severity_level = 3
 
-    return ort.InferenceSession(model_path, sess_options, providers=[get_provider(device)])
+    return ort.InferenceSession(onnx_path, sess_options, providers=[get_provider(device)])
 
 
 def get_provider(devices: str = "auto") -> str:
