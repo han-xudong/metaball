@@ -1,5 +1,5 @@
 """
-Metaball Class.
+MetaBall Class.
 """
 
 
@@ -7,14 +7,14 @@ import time
 import cv2
 import yaml
 from metaball.devices.camera import WebCamera
-from metaball.modules.zmq import MetaballPublisher
+from metaball.modules.zmq import MetaBallPublisher
 from metaball.models.onnx.ballnet import BallNet
 from metaball.configs.deploy import CameraConfig, DeployConfig
 
 
-class Metaball:
+class MetaBall:
     """
-    Metaball class.
+    MetaBall class.
 
     This class is used to initialize the metaball, camera, and BallNet model,
     and to run the metaball by capturing images and inferring the force and node
@@ -23,7 +23,7 @@ class Metaball:
     Attributes:
         camera (WebCamera): The camera instance.
         ballnet (BallNet): The BallNet model instance.
-        metaball_publisher (MetaballPublisher): The Metaball publisher instance.
+        metaball_publisher (MetaBallPublisher): The MetaBall publisher instance.
     """
 
     def __init__(self, cfg: DeployConfig) -> None:
@@ -47,7 +47,7 @@ class Metaball:
         self.ballnet = BallNet(cfg.onnx_path)
 
         # Create a metaball publisher
-        self.metaball_publisher = MetaballPublisher(host=cfg.host, port=cfg.port)
+        self.metaball_publisher = MetaBallPublisher(host=cfg.host, port=cfg.port)
 
     def release(self) -> None:
         """

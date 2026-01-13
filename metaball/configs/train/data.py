@@ -8,7 +8,7 @@ from typing import Tuple
 
 @dataclass
 class DataConfig:
-    dataset_path: str = "./data/omnineck/sim"
+    dataset_path: str = "./data/metaball/sim"
     """Path to the dataset directory."""
 
     num_workers: int = 4

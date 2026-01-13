@@ -59,12 +59,12 @@ class BallNet:
         Inference.
 
         Args:
-            motion (numpy.ndarray): The motion of the Ball.
+            motion (numpy.ndarray): The motion of the MetaBall.
 
         Returns:
             inference (tuple): Inference results.
-                - force (numpy.ndarray): The force on the bottom surface of the Ball.
-                - node (numpy.ndarray): The node displacement of the Ball.
+                - force (numpy.ndarray): The force on the bottom surface of the MetaBall.
+                - node (numpy.ndarray): The node displacement of the MetaBall.
         """
 
         return self.model.run(None, {"motion": motion.astype(np.float32).reshape(1, -1)})

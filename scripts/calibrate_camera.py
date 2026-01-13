@@ -24,7 +24,7 @@ If you choose MATLAB, it will exit the script and you can use MATLAB with the sa
 A MATLAB script is also provided in the `scripts` directory for saving the camera matrix and
 distortion coefficients into a `.yaml` file.
 
-The calibration results should be copied to the `config/camera` directory for further use.
+The calibration results should be copied to the `configs` directory for further use.
 """
 
 import argparse

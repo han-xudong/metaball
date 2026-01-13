@@ -1,10 +1,10 @@
 # Assembly Guide
 
-This guide provides instructions on how to assemble the Metaball.
+This guide provides instructions on how to assemble the MetaBall.
 
 ## 🛠️ Hardware Components
 
-Here is a list of the hardware components required for the Metaball assembly:
+Here is a list of the hardware components required for the MetaBall assembly:
 
 | Component        | Quantity | Specification / Model  | Link                                                                                       |
 |------------------|----------|------------------------|--------------------------------------------------------------------------------------------|

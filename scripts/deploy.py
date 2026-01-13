@@ -21,13 +21,13 @@ Various configuration options are available:
 """
 
 import tyro
-from metaball import Metaball
+from metaball import MetaBall
 from metaball.configs.deploy import DeployConfig
 
 def main():
     cfg = tyro.cli(DeployConfig)
 
-    metaball = Metaball(cfg=cfg)
+    metaball = MetaBall(cfg=cfg)
     metaball.run()
     
 

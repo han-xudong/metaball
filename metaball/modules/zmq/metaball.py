@@ -1,5 +1,5 @@
 """
-Metaball Publisher and Subscriber using ZeroMQ and Protobuf.
+MetaBall Publisher and Subscriber using ZeroMQ and Protobuf.
 """
 
 import zmq
@@ -9,11 +9,11 @@ from datetime import datetime
 from metaball.modules.protobuf import metaball_msg_pb2
 
 
-class MetaballPublisher:
+class MetaBallPublisher:
     """
-    MetaballPublisher class.
+    MetaBallPublisher class.
 
-    This class is used to publish Metaball messages using ZeroMQ.
+    This class is used to publish MetaBall messages using ZeroMQ.
 
     Attributes:
         context (zmq.Context): The ZMQ context for the publisher.
@@ -67,7 +67,7 @@ class MetaballPublisher:
         """
 
         # Set the message
-        metaball = metaball_msg_pb2.Metaball()
+        metaball = metaball_msg_pb2.MetaBall()
         metaball.timestamp = datetime.now().timestamp()
         metaball.img = img
         metaball.pose[:] = pose
@@ -85,11 +85,11 @@ class MetaballPublisher:
             self.context.term()
 
 
-class MetaballSubscriber:
+class MetaBallSubscriber:
     """
-    MetaballSubscriber class.
+    MetaBallSubscriber class.
 
-    This class is used to subscribe to Metaball messages using ZeroMQ.
+    This class is used to subscribe to MetaBall messages using ZeroMQ.
 
     Attributes:
         context (zmq.Context): The ZMQ context for the subscriber.
@@ -141,7 +141,7 @@ class MetaballSubscriber:
         """
 
         # Receive the message
-        metaball = metaball_msg_pb2.Metaball()
+        metaball = metaball_msg_pb2.MetaBall()
         metaball.ParseFromString(self.subscriber.recv())
 
         return (

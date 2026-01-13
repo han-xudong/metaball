@@ -94,9 +94,9 @@ Various configuration options are available:
 All data, including images, poses, forces, and node displacements, will be published through TCP (ZeroMQ + Protocol Buffers) in the following format:
 
 ```protobuf
-package Metaball;
+package MetaBall;
 
-message Metaball
+message MetaBall
 {
     double timestamp = 1;
     bytes img = 2;

@@ -1,9 +1,9 @@
 syntax = "proto3";
 
 // Namespace
-package Metaball;
+package MetaBall;
 
-message Metaball
+message MetaBall
 {
     double timestamp = 1;
     bytes img = 2;

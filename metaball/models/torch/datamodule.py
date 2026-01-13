@@ -1,15 +1,15 @@
 """
-Metaball DataModule.
+MetaBall DataModule.
 
-This module implements the Metaball DataModule for PyTorch Lightning.
+This module implements the MetaBall DataModule for PyTorch Lightning.
 It provides data loading and preprocessing functionalities for training
-and validation of the Metaball model.
+and validation of the MetaBall model.
 
 Usage:
 
 ```python
 from metaball.models import MetaBallDataModule
-datamodule = MetaballDataModule(
+datamodule = MetaBallDataModule(
     dataset_path=<dataset_path>,
     batch_size=<batch_size>,
     num_workers=<num_workers>,
@@ -35,9 +35,9 @@ from torch.utils.data import DataLoader, Dataset, random_split
 from pytorch_lightning import LightningDataModule
 
 
-class MetaballDataset(Dataset):
+class MetaBallDataset(Dataset):
     """
-    Metaball dataset.
+    MetaBall dataset.
     """
 
     def __init__(self, data: np.ndarray, transform=None):
@@ -81,9 +81,9 @@ class MetaballDataset(Dataset):
         return data_tensor
 
 
-class MetaballDataModule(LightningDataModule):
+class MetaBallDataModule(LightningDataModule):
     """
-    Metaball data module.
+    MetaBall data module.
     """
 
     def __init__(
@@ -127,7 +127,7 @@ class MetaballDataModule(LightningDataModule):
 
             data = np.load(data_path)
 
-            dataset = MetaballDataset(data=data, transform=None)
+            dataset = MetaBallDataset(data=data, transform=None)
 
             train_length = int(self.train_val_split[0] * len(dataset.data))
             val_length = int(len(dataset.data) - train_length)

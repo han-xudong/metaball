@@ -36,7 +36,7 @@ import torch
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import TensorBoardLogger
-from metaball.models import MetaballDataModule
+from metaball.models import MetaBallDataModule
 from metaball.models import BallNet
 from metaball.configs.train import TrainConfig
 
@@ -50,7 +50,7 @@ def main(cfg: TrainConfig) -> None:
     """
 
     # DataModule
-    datamodule = MetaballDataModule(
+    datamodule = MetaBallDataModule(
         dataset_path=cfg.data.dataset_path,
         batch_size=cfg.batch_size,
         num_workers=cfg.data.num_workers,

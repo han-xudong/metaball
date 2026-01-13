@@ -8,7 +8,7 @@ from typing import Tuple
 
 @dataclass
 class ModelConfig:
-    name: str = "NeckNet"
+    name: str = "BallNet"
     """Model name"""
 
     x_dim: Tuple[int, ...] = (6,)
