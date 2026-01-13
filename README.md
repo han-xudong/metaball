@@ -68,7 +68,7 @@ You can also follow the [training guide](./docs/training.ipynb) to test the mode
 The MetaBall hardware mainly consists of a camera, a controller board, a power board, an LED light board, a soft struture and several 3D-printed parts. The camera is used for capturing images, while the controller board publishes the images through TCP protocol. The power board supports 6-36V input and powers the controller board. The LED light board provides illumination for the camera. The soft struture is made of polyurethane (PU), which is the main part to interact with the environment. 3D-printed parts are used to assemble the camera, controller board, and power board together.
 
 <p align="center">
-  <img src="docs/assets/assembly.jpg" alt="MetaBall Assembly" width="400" />
+  <img src="docs/assets/assembly.jpg" alt="MetaBall Assembly" width="500" />
 </p>
 
 CAD files of the MetaBall are available on [Fusion](https://a360.co/4ePH4PC). Please refer to the [assembly guide](./docs/assembly.md) for more details on how to assemble the MetaBall.
