@@ -6,18 +6,16 @@ This guide provides instructions on how to assemble the Metaball.
 
 Here is a list of the hardware components required for the Metaball assembly:
 
-| Component        | Quantity | Specification / Model  | Link                                                       |
-|------------------|----------|------------------------|------------------------------------------------------------|
-| Soft Struture    | 1        | TPU                    | https://www.wenext.com/materials/vacuum-casting/tpu        |
-| Controller Board | 1        | LicheeRV Nano-W        | https://www.aliexpress.com/item/1005006519668532.html      |
-| Camera           | 1        | GC4653                 | https://www.aliexpress.com/item/1005006519668532.html      |
-| Lens             | 1        | 1.8mm 1/4" 5MP         | https://item.taobao.com/item.htm?id=671331312652           |
-| Power Board      | 1        | FR-4 PCB               | https://jlcpcb.com                                         |
-| LED Light Board  | 1        | FR-4 PCB               | https://jlcpcb.com                                         |
-| USB Cable        | 1        | Type-C                 | https://www.aliexpress.com/item/1005006434080534.html      |
-| 3D-Printed Parts | 3        | PLA or ABS             | https://us.store.bambulab.com/products/pla-basic-filament  |
-
-CAD files for the soft struture and 3D-printed parts are available on [Fusion](https://a360.co/4ePH4PC). PCB files for the power board and LED light board can be found in `docs/pcbs/`.
+| Component        | Quantity | Specification / Model  | Link                                                                                       |
+|------------------|----------|------------------------|--------------------------------------------------------------------------------------------|
+| Soft Struture    | 1        | TPU                    | https://www.wenext.com/materials/vacuum-casting/tpu                                        |
+| Controller Board | 1        | LicheeRV Nano-W        | https://www.aliexpress.com/item/1005006519668532.html                                      |
+| Camera           | 1        | GC4653                 | https://www.aliexpress.com/item/1005006519668532.html                                      |
+| Lens             | 1        | 1.8mm 1/4" 5MP         | https://item.taobao.com/item.htm?id=671331312652                                           |
+| Power Board      | 1        | FR-4 PCB               | https://drive.google.com/drive/folders/1ZkG2VSxWzBC7wph7RwXa07rj1HjClsA1?usp=drive_link    |
+| LED Light Board  | 1        | FR-4 PCB               | https://drive.google.com/drive/folders/1yD8PEcGVPE61CMEFvTqeL_rykpJHFsyy?usp=drive_link    |
+| USB Cable        | 1        | Type-C                 | https://www.aliexpress.com/item/1005006434080534.html                                      |
+| 3D-Printed Parts | 3        | PLA or ABS             | https://drive.google.com/drive/folders/1sVMEvZ0fE7xA3FavJFJfnwHuXMpaLqHJ?usp=drive_link    |
 
 ## 🧩 Assembly Steps
 
@@ -31,7 +29,7 @@ It's recommended to fabricate the soft struture with TPU by vacuum casting, whic
 
 ### Step 2: Prepare the 3D-Printed Parts
 
-The 3D-printed parts can be fabricated using PLA or ABS materials. You can use any 3D printing service or your own 3D printer to print the parts. The CAD files for the 3D-printed parts are available on [Fusion](https://a360.co/4ePH4PC). We also provide a [3mf file]() for 3D printers like Bambu Lab X1C.
+The 3D-printed parts can be fabricated using PLA or ABS materials. You can use any 3D printing service or your own 3D printer to print the parts. The CAD files for the 3D-printed parts are available on [Google Drive](https://drive.google.com/drive/folders/1sVMEvZ0fE7xA3FavJFJfnwHuXMpaLqHJ?usp=drive_link), and the assembly preview is available on [Fusion](https://a360.co/4ePH4PC). We also provide a [3mf file](https://makerworld.com/models/2239256-metaball-a-soft-end-of-robot-module) for 3D printers like Bambu Lab X1C.
 
 <p align="center">
   <a href="https://a360.co/4ePH4PC"><img src="./assets/assembly/fusion.jpg" alt="3D-Printed Parts" width="400" /></a>
@@ -40,7 +38,7 @@ The 3D-printed parts can be fabricated using PLA or ABS materials. You can use a
 
 ### Step 3: Prepare the PCBs
 
-The power board and LED light board are designed as FR-4 PCBs. You can use [JLCPCB](https://jlcpcb.com) to fabricate the PCBs. The PCB files are available in `docs/pcbs`. You can open `epro` files in [EasyEDA (LCEDA)](https://easyeda.com) to see the design and order fabrication.
+The power board and LED light board are designed as FR-4 PCBs. You can use [JLCPCB](https://jlcpcb.com) to fabricate the PCBs. The PCB files are available on [Google Drive](https://drive.google.com/drive/folders/1VPyich8r8H6ijrCqrMxzIe2TUbrFpQG2?usp=drive_link).
 
 <p align="center">
   <img src="./assets/assembly/led_board.jpg" alt="PCBs" width="250" />
@@ -51,7 +49,7 @@ The power board and LED light board are designed as FR-4 PCBs. You can use [JLCP
 
 The controller board is [LicheeRV Nano](https://wiki.sipeed.com/hardware/en/lichee/RV_Nano/1_intro.html), a mini-sized development board equipped with the SG2002 processor. The W version of the board supports 2.4G / 5.8G dual-band WiFi6, which is necessary for wireless communication.
 
-You can flash the SD card with [metaball.img]() using [balenaEtcher](https://www.balena.io/etcher/). After flashing, insert the SD card into the controller board and connect the board to your computer via USB Type-C cable. You can find the IP address of the board by running the following command:
+You can flash the SD card with [metaball.img](https://drive.google.com/drive/folders/1K3K_dp9mxKrNleex0SsSKON6uSxgWlT2?usp=drive_link) using [balenaEtcher](https://www.balena.io/etcher/). After flashing, insert the SD card into the controller board and connect the board to your computer via USB Type-C cable. You can find the IP address of the board by running the following command:
 
 ```bash
 arp -a
