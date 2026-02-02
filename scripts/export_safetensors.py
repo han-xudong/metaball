@@ -9,7 +9,7 @@ It is used for safe and efficient model sharing on Hugging Face.
 Example usage:
 
 ```bash
-python export_safetensors.py --ckpt_path <checkpoint_path>
+python export_safetensors.py --ckpt_dir <checkpoint_path>
 ```
 
 where <checkpoint_path> is the path to the checkpoint folder.
@@ -20,14 +20,14 @@ import json
 import os
 import torch
 from safetensors.torch import save_file
-from metaball.models.torch.ballnet import BallNet
+from metaball.models import BallNet
 
 
-def extract_config_from_ckpt(ckpt_path: str) -> dict:
+def extract_config_from_ckpt(ckpt_dir: str) -> dict:
     """
     Load Lightning checkpoint and extract model config for inference.
     """
-    ckpt = torch.load(ckpt_path, map_location="cpu")
+    ckpt = torch.load(ckpt_dir, map_location="cpu")
 
     if "hyper_parameters" not in ckpt:
         raise RuntimeError("No hyper_parameters found in checkpoint")
@@ -38,7 +38,7 @@ def extract_config_from_ckpt(ckpt_path: str) -> dict:
         "architectures": ["BallNetModel"],
         "model_type": "ballnet",
         "framework": "pytorch",
-        "library_name": "omnineck",
+        "library_name": "metaball",
         "x_dim": hp["x_dim"],
         "y_dim": hp["y_dim"],
         "hidden_dim": hp["hidden_dim"],
@@ -76,7 +76,7 @@ def safetensors_export(ckpt_root: str) -> None:
         "format": "pt",
         "framework": "pytorch",
         "model_type": "BallNet",
-        "library_name": "omnineck",
+        "library_name": "metaball",
     }
 
     save_file(
@@ -104,10 +104,10 @@ def safetensors_export(ckpt_root: str) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--ckpt_path",
+        "--ckpt_dir",
         type=str,
         help="Path to the checkpoint folder.",
     )
     args = parser.parse_args()
 
-    safetensors_export(args.ckpt_path)
+    safetensors_export(args.ckpt_dir)
