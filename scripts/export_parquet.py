@@ -1,83 +1,120 @@
 #!/usr/bin/env python
 
 """
-Export Parquet Data
+Export HDF5 dataset to Parquet format.
 
-This script exports the data to Parquet format for easier analysis.
+HDF5 structure assumed:
 
-Example usage:
-
-```bash
-python export_parquet.py --data_path <data_path> --chunk_size <chunk_size>
-```
-
-where <data_path> is the path to the data file, and <chunk_size> (default: 5000) is the number of samples per chunk.
+root
+├── train
+│   ├── pose           (N, 6)           float32
+│   ├── force          (N, 6)           float32
+│   ├── bound_node     (N, O, 4)        float32
+│   └── surface_node   (N, P, 4)        float32
+└── test
+    ├── pose
+    ├── force
+    ├── bound_node
+    └── surface_node
 """
 
 import argparse
 import os
-import numpy as np
+import h5py
 import pyarrow as pa
 import pyarrow.parquet as pq
 
 
-def export_parquet(data_path: str, chunk_size: int) -> None:
+def export_split(
+    h5_path: str,
+    split: str,
+    output_dir: str,
+    chunk_size: int,
+) -> None:
     """
-    Export data to Parquet format.
-
-    Args:
-        data_path (str): The path to the data file.
+    Export one split (train / test) to Parquet files.
     """
 
-    # Load the data
-    data = np.load(data_path)
-    num_samples, num_features = data.shape
+    with h5py.File(h5_path, "r") as f:
+        grp = f[split]
 
-    # Create output directory if not exists
-    output_dir = os.path.join(os.path.dirname(data_path), "parquet")
-    os.makedirs(output_dir, exist_ok=True)
+        pose_ds = grp["pose"]
+        force_ds = grp["force"]
+        surface_node_ds = grp["surface_node"]
 
-    # Convert to DataFrame
-    for i in range(0, num_samples, chunk_size):
-        chunk_data = data[i : i + chunk_size]
-        motion = chunk_data[:, :6]
-        force = chunk_data[:, 6:12]
-        nodes = chunk_data[:, 12:].reshape(-1, (num_features - 12) // 3, 3)
+        num_samples = pose_ds.shape[0]
 
-        motion_array = pa.array(motion.tolist(), type=pa.list_(pa.float64(), 6))
-        force_array = pa.array(force.tolist(), type=pa.list_(pa.float64(), 6))
-        nodes_array = pa.array(nodes.tolist(), type=pa.list_(pa.list_(pa.float64(), 3)))
-        schema = pa.schema([
-            ("motion", pa.list_(pa.float64(), 6)),
-            ("force", pa.list_(pa.float64(), 6)),
-            ("nodes", pa.list_(pa.list_(pa.float64(), 3))),
-        ])
-        table = pa.table({
-            "motion": motion_array,
-            "force": force_array,
-            "nodes": nodes_array,
-        }, schema=schema)
-        
-        output_path = os.path.join(output_dir, f"data_{i // chunk_size}.parquet")
-        pq.write_table(table, output_path)
-        
-        file_size = os.path.getsize(output_path) / (1024 * 1024)
-        print(f"Exported to {output_path}, size: {file_size:.2f} MB, samples: {len(chunk_data)}")
+        os.makedirs(output_dir, exist_ok=True)
+
+        print(f"▶ Exporting split '{split}' ({num_samples} samples)")
+
+        for start in range(0, num_samples, chunk_size):
+            end = min(start + chunk_size, num_samples)
+
+            pose = pose_ds[start:end]
+            force = force_ds[start:end]
+            surface_node = surface_node_ds[start:end]
+
+            table = pa.table(
+                {
+                    "pose": pa.array(
+                        pose.tolist(),
+                        type=pa.list_(pa.float32(), 6),
+                    ),
+                    "force": pa.array(
+                        force.tolist(),
+                        type=pa.list_(pa.float32(), 6),
+                    ),
+                    "surface_node": pa.array(
+                        surface_node.tolist(),
+                        type=pa.list_(pa.list_(pa.float32(), 4)),
+                    ),
+                }
+            )
+
+            out_path = os.path.join(output_dir, f"data_{start // chunk_size:05d}.parquet")
+            pq.write_table(table, out_path)
+
+            size_mb = os.path.getsize(out_path) / (1024 * 1024)
+            print(f"  ✓ {out_path} | samples: {end - start} | {size_mb:.2f} MB")
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--data_path",
+        "--h5_path",
         type=str,
-        default="data/finger/sim/data.npy",
-        help="Path to the data file.",
+        default="data/metaball/sim/data.h5",
+        help="Path to the input HDF5 file",
+    )
+    parser.add_argument(
+        "--output_dir",
+        type=str,
+        default="parquet",
+        help="Output directory",
     )
     parser.add_argument(
         "--chunk_size",
         type=int,
-        default=5000,
-        help="Number of samples per chunk.",
+        default=2000,
+        help="Number of samples per Parquet file",
     )
     args = parser.parse_args()
-    export_parquet(args.data_path, args.chunk_size)
+
+    export_split(
+        h5_path=args.h5_path,
+        split="train",
+        output_dir=os.path.join(os.path.dirname(args.h5_path), args.output_dir, "train"),
+        chunk_size=args.chunk_size,
+    )
+
+    export_split(
+        h5_path=args.h5_path,
+        split="test",
+        output_dir=os.path.join(os.path.dirname(args.h5_path), args.output_dir, "test"),
+        chunk_size=args.chunk_size,
+    )
+
+
+if __name__ == "__main__":
+    main()

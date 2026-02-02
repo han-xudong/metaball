@@ -8,10 +8,24 @@ from pytorch_lightning import LightningModule
 from torch.nn import functional as F
 
 
+class Normalizer(nn.Module):
+    def __init__(self, mean: Tensor, std: Tensor, eps: float = 1e-8):
+        super().__init__()
+        self.register_buffer("mean", mean)
+        self.register_buffer("std", std)
+        self.eps = eps
+
+    def normalize(self, x: Tensor) -> Tensor:
+        return (x - self.mean) / (self.std + self.eps)
+
+    def denormalize(self, x: Tensor) -> Tensor:
+        return x * (self.std + self.eps) + self.mean
+
+
 class BallNet(LightningModule):
     """
     BallNet is a PyTorch Lightning model for the Fingerprint dataset.
-    
+
     It is used for training and evaluation of the model.
     """
 
@@ -19,8 +33,10 @@ class BallNet(LightningModule):
         self,
         x_dim: Tuple[int, ...],
         y_dim: Tuple[int, ...],
-        h1_dim: Tuple[int, ...],
-        h2_dim: Tuple[int, ...],
+        hidden_dim: list,
+        mean: list = None,
+        std: list = None,
+        zero_loss_weight: float = 1.0,
         lr: float = 1e-4,
         **kwargs,
     ) -> None:
@@ -28,40 +44,88 @@ class BallNet(LightningModule):
         Initialize the model.
 
         Args:
-            x_dim (list): The input dimension.
-            y_dim (list): The output dimension.
-            h1_dim (list): The first hidden layer dimension.
-            h2_dim (list): The second hidden layer dimension.
-            lr (float, optional): The learning rate. Default is 1e-4.
-            **kwargs: Additional keyword arguments.
+            x_dim: dimension of the input data
+            y_dim: dimension of the output data
+            hidden_dim: dimension of the hidden layers
+            mean: mean of the data for normalization
+            std: standard deviation of the data for normalization
+            zero_loss_weight: weight for the zero loss component
+            lr: learning rate for the optimizer
         """
 
         # Call the super constructor
-        super().__init__()
+        super().__init__(**kwargs)
 
         # Set the model parameters
-
         self.save_hyperparameters()
         self.lr = lr
         self.x_dim = x_dim
         self.y_dim = y_dim
-        self.h1_dim = h1_dim
-        self.h2_dim = h2_dim
-        
+        self.hidden_dim = hidden_dim
+        self.zero_loss_weight = zero_loss_weight
+
+        # Check dimensions
+        assert len(self.x_dim) == 1, "Only one input dimension is supported."
+        assert len(self.y_dim) == len(self.hidden_dim), "Output and hidden dimensions must match."
+        assert len(mean) == sum(self.x_dim) + sum(self.y_dim), "Mean dimension mismatch."
+        assert len(std) == sum(self.x_dim) + sum(self.y_dim), "Std dimension mismatch."
+
+        self.x_mean = []
+        self.x_std = []
+        self.y_mean = []
+        self.y_std = []
+
+        if mean is not None and std is not None:
+            data_dim = np.concatenate((self.x_dim, self.y_dim))
+            data_start = 0
+            data_end = 0
+            for i in range(len(data_dim)):
+                data_end += data_dim[i]
+                if i < len(self.x_dim):
+                    self.x_mean.append(mean[data_start:data_end])
+                    self.x_std.append(std[data_start:data_end])
+                else:
+                    self.y_mean.append(mean[data_start:data_end])
+                    self.y_std.append(std[data_start:data_end])
+                data_start = data_end
+        else:
+            assert False, "Mean and std must be provided."
 
         # Define the model architecture
+        self.x_normalizers = nn.ModuleList(
+            [
+                Normalizer(
+                    mean=torch.tensor(self.x_mean[i], dtype=torch.float32),
+                    std=torch.clamp(torch.tensor(self.x_std[i], dtype=torch.float32), min=1e-8),
+                )
+                for i in range(len(self.x_dim))
+            ]
+        )
+
+        self.y_normalizers = nn.ModuleList(
+            [
+                Normalizer(
+                    mean=torch.tensor(self.y_mean[i], dtype=torch.float32),
+                    std=torch.clamp(torch.tensor(self.y_std[i], dtype=torch.float32), min=1e-8),
+                )
+                for i in range(len(self.y_dim))
+            ]
+        )
+
+        self.estimators = nn.ModuleList()
         for i in range(len(self.y_dim)):
-            setattr(
-                self,
-                f"estimator_{i}",
-                nn.Sequential(
-                    nn.Linear(self.x_dim[0], self.h1_dim[i]),
-                    nn.ReLU(),
-                    nn.Linear(self.h1_dim[i], self.h2_dim[i]),
-                    nn.ReLU(),
-                    nn.Linear(self.h2_dim[i], self.y_dim[i]),
-                ),
-            )
+            layers = []
+            in_dim = self.x_dim[0]
+
+            for j in range(len(self.hidden_dim[i])):
+                out_dim = self.hidden_dim[i][j]
+                layers.append(nn.Linear(in_dim, out_dim))
+                layers.append(nn.ReLU())
+                in_dim = out_dim
+
+            layers.append(nn.Linear(in_dim, self.y_dim[i]))
+
+            self.estimators.append(nn.Sequential(*layers))
 
     @staticmethod
     def pretrained_weights_available():
@@ -88,33 +152,40 @@ class BallNet(LightningModule):
             x (Tensor): the input data.
 
         Returns:
-            x_hat_list (List[Tensor]): the predicted data.
+            y_list: the predicted data.
         """
-        
-        x_hat_list = []
+
+        x = self.x_normalizers[0].normalize(x)
+
+        y_list = []
         for i in range(len(self.y_dim)):
-            x_hat = getattr(self, f"estimator_{i}")(x)
-            x_hat_list.append(x_hat)
+            y = self.estimators[i](x)
+            y = self.y_normalizers[i].denormalize(y)
+            y_list.append(y)
 
         # Return the output data
-        return x_hat_list
+        return y_list
 
     def forward_with_index(self, x: Tensor, output_index: int) -> Tensor:
-        """
-        Forward pass of the model with index.
+        """Forward pass of the model with index.
 
         Args:
-            x (Tensor): the input data.
-            output_index (int): the index of the output layer.
+            x: the input data.
+            output_index: the index of the output layer.
 
         Returns:
-            x_hat (Tensor): the predicted data for the specified output index.
+            x_recon: the reconstructed data.
+            mu: the mu.
+            std: the std.
         """
 
-        x_hat = getattr(self, f"estimator_{output_index}")(x)
+        x = self.x_normalizers[0].normalize(x)
+
+        y = self.estimators[output_index](x)
+        y = self.y_normalizers[output_index].denormalize(y)
 
         # Return the output data
-        return x_hat
+        return y
 
     def _prepare_batch(self, batch: Any) -> Tensor:
         """
@@ -159,27 +230,35 @@ class BallNet(LightningModule):
             data_list.append(data_i)
             data_start = data_end
 
-        # Run the step
-        y_hat_list = []
-
-        for i in range(len(self.y_dim)):
-            y_hat = getattr(self, f"estimator_{i}")(data_list[0])
-            y_hat_list.append(y_hat)
-
         # Define the logs
         logs = {}
 
-        # Calculate the reconstruction loss
+        # Define the loss
         loss_list = []
+        zero_loss_list = []
+        
+        # Calculate the prediction loss
         for i in range(len(self.y_dim)):
             y_i = data_list[i + 1]
-            y_hat_i = y_hat_list[i]
-            loss = F.mse_loss(y_hat_i, y_i)
+            y_i_norm = self.y_normalizers[i].normalize(y_i)
+            x_norm = self.x_normalizers[0].normalize(data_list[0])
+            y_hat_i_norm = self.estimators[i](x_norm)
+            loss = F.mse_loss(y_hat_i_norm, y_i_norm)
             loss_list.append(loss)
             logs[f"loss_{i}"] = loss
+        
+        # Calculate the zero loss
+        for i in range(len(self.y_dim)):
+            y_i_zero = torch.zeros_like(data_list[i + 1])
+            y_i_zero_norm = self.y_normalizers[i].normalize(y_i_zero)
+            x_zero_norm = self.x_normalizers[0].normalize(torch.zeros_like(data_list[0]))
+            y_hat_i_zero_norm = self.estimators[i](x_zero_norm)
+            zero_loss = F.mse_loss(y_hat_i_zero_norm, y_i_zero_norm)
+            zero_loss_list.append(zero_loss)
+            logs[f"zero_loss_{i}"] = zero_loss
 
         # Calculate the total loss
-        loss = sum(loss_list)
+        loss = sum(loss_list) + self.zero_loss_weight * sum(zero_loss_list)
 
         logs["loss"] = loss
         loss = Tensor(loss)
@@ -255,18 +334,18 @@ class BallNet(LightningModule):
         Returns:
             optimizer (torch.optim.Optimizer): the optimizer.
         """
-        
+
         # Initialize a list to hold the parameters to optimize
         params = []
-        
+
         # Iterate over each output branch (estimator)
         for i in range(len(self.y_dim)):
             # Add the parameters of the estimator to the optimizer's parameter list
-            params += list(getattr(self, f"estimator_{i}").parameters())
-        
+            params += list(self.estimators[i].parameters())
+
         # Filter out parameters that have requires_grad set to False
         params = list(filter(lambda p: p.requires_grad, params))
-        
+
         # Return the Adam optimizer configured with the filtered parameters
         return torch.optim.Adam(params, lr=self.lr)
 
@@ -277,19 +356,10 @@ class BallNet(LightningModule):
         Args:
             path: the path to save the exported model.
         """
-        
+
         # Create a traced script module
         traced = torch.jit.script(self)
 
         # Save the traced script module
         traced.save(path)
         print(f"Saved model to: {path}")
-
-
-if __name__ == "__main__":
-    # Create the model
-    model = BallNet(x_dim=[6], y_dim=[6, 1800], h1_dim=[100, 1000], h2_dim=[100, 1000])
-    # Print the model
-    print(model)
-    # Print the hyperparameters
-    print(model.hparams)

@@ -14,6 +14,7 @@ datamodule = MetaBallDataModule(
     batch_size=<batch_size>,
     num_workers=<num_workers>,
     pin_memory=<pin_memory>,
+    persistent_workers=<persistent_workers>,
     train_val_split=<train_val_split>,
 )
 datamodule.setup()
@@ -21,12 +22,13 @@ datamodule.setup()
 
 where `<dataset_path>` is the path to the dataset, `<batch_size>` is the batch size,
 `<num_workers>` is the number of workers for data loading, `<pin_memory>` is a boolean
-indicating whether to pin memory, and `<train_val_split>` is a tuple indicating the
+indicating whether to pin memory, `<persistent_workers>` is a boolean indicating whether 
+to use persistent workers, and `<train_val_split>` is a tuple indicating the 
 train/validation split ratios.
 """
 
-
 import os
+import h5py
 import numpy as np
 import torch
 from torch import Tensor
@@ -88,20 +90,22 @@ class MetaBallDataModule(LightningDataModule):
 
     def __init__(
         self,
-        data_folder: str,
+        dataset_path: str,
         batch_size: int = 128,
         num_workers: int = 4,
         pin_memory: bool = False,
+        persistent_workers: bool = True,
         train_val_split: Tuple[float, float] = (0.875, 0.125),
     ) -> None:
         """
         Initialize the data module.
 
         Args:
-            data_folder (str): The folder containing the dataset.
+            dataset_path (str): The path to the dataset directory.
             batch_size (int, optional): The batch size. Defaults to 128.
             num_workers (int, optional): The number of workers. Defaults to 4.
             pin_memory (bool, optional): Whether to pin memory. Defaults to False.
+            persistent_workers (bool, optional): Whether to use persistent workers. Defaults to True.
             train_val_split (Tuple[float, float], optional): The train/val split. Defaults to (0.875, 0.125).
         """
 
@@ -110,7 +114,8 @@ class MetaBallDataModule(LightningDataModule):
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.pin_memory = pin_memory
-        self.data_folder = data_folder
+        self.persistent_workers = persistent_workers
+        self.dataset_path = dataset_path
 
         self.data_train: Optional[Dataset] = None
         self.data_val: Optional[Dataset] = None
@@ -121,11 +126,17 @@ class MetaBallDataModule(LightningDataModule):
 
     def setup(self, stage: Optional[str] = None):
         if not self.data_train or not self.data_val or not self.data_test:
-            data_path = self.data_folder + "train_data.npy"
-            if not os.path.exists(data_path):
-                raise ValueError(f"Data file {data_path} does not exist.")
 
-            data = np.load(data_path)
+            data_path = os.path.join(self.dataset_path, "data.h5")
+            if not os.path.exists(data_path):
+                raise ValueError("Data file does not exist.")
+
+            with h5py.File(data_path, "r") as f:
+                pose = f["train/pose"][:]
+                force = f["train/force"][:]
+                surface_node = f["train/surface_node"][:, :, 1:]
+
+            data = np.concatenate([pose, force, surface_node.reshape(surface_node.shape[0], -1)], axis=1)
 
             dataset = MetaBallDataset(data=data, transform=None)
 
@@ -138,13 +149,18 @@ class MetaBallDataModule(LightningDataModule):
                 generator=torch.Generator().manual_seed(42),
             )
 
+            # calculate mean and std from training data
+            all_train_data = torch.cat([self.data_train[i] for i in range(len(self.data_train))], dim=0)
+            self.data_mean = torch.mean(all_train_data, dim=0)
+            self.data_std = torch.std(all_train_data, dim=0)
+
     def train_dataloader(self):
         return DataLoader(
             dataset=self.data_train,
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
-            persistent_workers=True,
+            persistent_workers=self.persistent_workers,
             shuffle=True,
             drop_last=True,
         )
@@ -155,7 +171,7 @@ class MetaBallDataModule(LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
-            persistent_workers=True,
+            persistent_workers=self.persistent_workers,
             shuffle=False,
             drop_last=True,
         )
@@ -166,7 +182,7 @@ class MetaBallDataModule(LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
-            persistent_workers=True,
+            persistent_workers=self.persistent_workers,
             shuffle=False,
             drop_last=True,
         )

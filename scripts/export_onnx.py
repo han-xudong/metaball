@@ -17,58 +17,8 @@ where <ckpt_dir> is the path to the checkpoint folder.
 import argparse
 import os
 import torch
-from torch import Tensor
-from typing import List
 import onnx
-from metaball.models.torch.ballnet import BallNet
-
-
-class BallNetRuntime(BallNet):
-    """
-    BallNetRuntime is a BallNet model for runtime inference.
-
-    It is used for ONNX export and real-world deployment.
-
-    """
-
-    def __init__(
-        self,
-        x_dim: list,
-        y_dim: list,
-        h1_dim: list,
-        h2_dim: list,
-        **kwargs,
-    ) -> None:
-        """
-        Initialize the model.
-
-        Args:
-            x_dim (list): dimension of the input data.
-            y_dim (list): dimension of the output data.
-            h1_dim (list): dimension of the hidden layer 1.
-            h2_dim (list): dimension of the hidden layer 2.
-        """
-
-        # Call the super constructor
-        super().__init__(x_dim, y_dim, h1_dim, h2_dim, **kwargs)
-
-    def forward(self, x: Tensor) -> List[Tensor]:
-        """
-        Forward pass of the model.
-
-        Args:
-            x (Tensor): Input tensor.
-
-        Returns:
-            outputs (List[Tensor]): List of output tensors.
-        """
-
-        outputs = []
-        for i in range(len(self.y_dim)):
-            y = getattr(self, f"estimator_{i}")(x)
-            outputs.append(y)
-
-        return outputs
+from metaball.models import BallNet
 
 
 def onnx_export(ckpt_dir: str) -> None:
@@ -79,13 +29,10 @@ def onnx_export(ckpt_dir: str) -> None:
         ckpt_dir (str): Path to the checkpoint folder.
     """
 
-    model_name = "_".join(ckpt_dir.split("/")[1:-1])
-    print(f"Exporting {model_name} model to ONNX format")
-
     ckpt_path = os.path.join(ckpt_dir, "checkpoints", os.listdir(os.path.join(ckpt_dir, "checkpoints"))[0])
     # Load the model
     device = torch.device("cpu")
-    model = BallNetRuntime.load_from_checkpoint(ckpt_path).to(device)
+    model = BallNet.load_from_checkpoint(ckpt_path).to(device)
     model.eval()
 
     # Get input dimension from the model
@@ -93,7 +40,9 @@ def onnx_export(ckpt_dir: str) -> None:
 
     # Export the model
     dummy_input = torch.randn(1, input_dim, dtype=torch.float32)
-    onnx_path = os.path.join(ckpt_dir, f"{model_name}.onnx")
+    if not os.path.exists(os.path.join(ckpt_dir, "onnx")):
+        os.makedirs(os.path.join(ckpt_dir, "onnx"))
+    onnx_path = os.path.join(ckpt_dir, "onnx", "model.onnx")
 
     # Export with only one input
     torch.onnx.export(
@@ -130,7 +79,11 @@ def onnx_export(ckpt_dir: str) -> None:
 if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ckpt_dir", type=str, default="lightning_logs/BallNet/")
+    parser.add_argument(
+        "--ckpt_dir",
+        type=str,
+        help="Path to the checkpoint folder.",
+    )
     args = parser.parse_args()
 
     onnx_export(args.ckpt_dir)
