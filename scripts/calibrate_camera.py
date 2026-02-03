@@ -11,7 +11,7 @@ Usage:
 python calibrate_camera.py --host <host> --port <port> --width 320 --height 240
 ```
 
-where `<host>` is the host of the camera, which depends on your network configuration.
+where `<host>` is the host address of the camera, which depends on your network configuration.
 
 The script opens a window to display the frame from the camera.
 You can press 'c' to capture the image, and press 'ESC' to quit capturing.

@@ -77,10 +77,10 @@ The camera is mounted inside the MetaBall base mount with M2 screws after replac
 After assembling the camera and controller board, you need to calibrate the camera's intrinsic parameters, including camera matrix and distortion coefficients. You can use the [camera calibration script](../scripts/calibrate_camera.py) to calibrate the camera by running the following command after connecting the camera to the host computer:
 
 ```bash
-python scripts/calibrate_camera.py --name <name> --host <host>
+python scripts/calibrate_camera.py --host <host> --port <port> --width 320 --height 240
 ```
 
-where `<name>` is the name of the camera and `<host>` is the IP address of the controller board. You will see a OpenCV window showing the camera images, and you can press `c` to capture images and `ESC` to exit. Images are saved in `data/camera_calibration` directory. Then the script will ask you whether to use OpenCV or MATLAB for calibration. For OpenCV, the script will automatically calculate and save the parameters beside the images. For MATLAB, you need to run the `Camera Calibration` app in MATLAB and load the images to calibrate the camera. After calibration, you can use `scripts/calib2yaml.m` to save the parameters in a YAML file.
+where `<host>` is the host address of the controller board. You will see a OpenCV window showing the camera images, and you can press `c` to capture images and `ESC` to exit. Images are saved in `data/camera_calibration` directory. Then the script will ask you whether to use OpenCV or MATLAB for calibration. For OpenCV, the script will automatically calculate and save the parameters beside the images. For MATLAB, you need to run the `Camera Calibration` app in MATLAB and load the images to calibrate the camera. After calibration, you can use `scripts/calib2yaml.m` to save the parameters in a YAML file.
 
 ### Step 8: Assemble Other Components
 
