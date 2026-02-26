@@ -77,7 +77,7 @@ CAD files of the MetaBall are available on [Fusion](https://a360.co/4ePH4PC). Pl
 
 ## 🚀 Deployment
 
-After connecting the Omni-Neck to the computer and modifying the configuration, you can deploy it by running the following command:
+After connecting the MetaBall to the computer and modifying the configuration, you can deploy it by running the following command:
 
 ```bash
 uv run metaball [options]
@@ -121,11 +121,11 @@ If you find this project useful in your research, please consider citing:
 
 ```bibtex
 @article{han2025anchoring,
-    title={Anchoring Morphological Representations Unlocks Latent Proprioception in Soft Robots},
-    author={Han, Xudong and Guo, Ning and Xu, Ronghan and Wan, Fang and Song, Chaoyang},
-    journal={Advanced Intelligent Systems},
-    volume={7},
-    pages={e202500444},
-    year={2025}
+  title={Anchoring Morphological Representations Unlocks Latent Proprioception in Soft Robots},
+  author={Han, Xudong and Guo, Ning and Xu, Ronghan and Wan, Fang and Song, Chaoyang},
+  journal={Advanced Intelligent Systems},
+  volume={7},
+  pages={e202500444},
+  year={2025}
 }
 ```
