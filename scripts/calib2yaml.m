@@ -10,7 +10,7 @@ function calib2yaml(cameraParams, filePath)
 
     % Write the distortion coefficients
     distortion = [cameraParams.RadialDistortion(1:2), cameraParams.TangentialDistortion, cameraParams.RadialDistortion(3)];
-    fprintf(fileID, 'dist:\n');
+    fprintf(fileID, 'dist_coeff:\n');
     for i = 1:size(distortion, 1)
         for j = 1:size(distortion, 2)
             if j == 1

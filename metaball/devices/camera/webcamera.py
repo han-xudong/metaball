@@ -38,15 +38,20 @@ class WebCamera:
         self.width = camera_cfg.width
         self.height = camera_cfg.height
         self.mtx = np.array(camera_cfg.mtx)
-        self.dist = np.array(camera_cfg.dist)
+        self.dist_coeff = np.array(camera_cfg.dist_coeff)
         if camera_cfg.host is None:
             raise ValueError(
                 "Camera host is not set. Please check the configuration file."
             )
         self.camera = CameraSubscriber(host=camera_cfg.host, port=camera_cfg.port)
+        _, dist_coeff, mtx = self.camera.subscribeMessage()
+        if len(dist_coeff) == self.dist_coeff.size:
+            self.dist_coeff = np.array(dist_coeff).reshape(self.dist_coeff.shape)
+        if len(mtx) == self.mtx.size:
+            self.mtx = np.array(mtx).reshape(self.mtx.shape)
         print(f"Resolution: {self.width}x{self.height}")
         print(f"Camera matrix:\n{self.mtx}")
-        print(f"Camera distortion:\n{self.dist}")
+        print(f"Camera distortion:\n{self.dist_coeff}")
 
         # Set the detector parameters
         aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_100)
@@ -210,7 +215,7 @@ class WebCamera:
 
         # Estimate the pose using IPPE_SQUARE
         rvec, tvec, _ = cv2.aruco.estimatePoseSingleMarkers(
-            corners, self.marker_size, self.mtx, self.dist
+            corners, self.marker_size, self.mtx, self.dist_coeff
         )
         pose = np.hstack((tvec * 1000, rvec)).reshape(-1, 6)
 
@@ -221,7 +226,7 @@ class WebCamera:
         # Draw the markers
         color_image_result = cv2.aruco.drawDetectedMarkers(img, corners, ids)
         color_image_result = cv2.drawFrameAxes(
-            img, self.mtx, self.dist, rvec, tvec, self.marker_size
+            img, self.mtx, self.dist_coeff, rvec, tvec, self.marker_size
         )
         # Return the pose and image
         return pose, color_image_result
@@ -274,7 +279,7 @@ class WebCamera:
 
         # Read the image from the camera
         try:
-            img = self.camera.subscribeMessage()
+            img, _, _ = self.camera.subscribeMessage()
             img = cv2.imdecode(img, cv2.IMREAD_COLOR)
         except Exception:
             raise ValueError(

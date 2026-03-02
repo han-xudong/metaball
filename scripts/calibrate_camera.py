@@ -142,13 +142,13 @@ def main(name: str, host: str, port: int, width: int, height: int) -> None:
 
         # Find chessboard corners in the images
         print("Finding chessboard corners...")
-        mtx, dist, rvecs, tvecs = calibrate_chessboard(images, chess_size=chess_size, square_size=square_size)
+        mtx, dist_coeff, rvecs, tvecs = calibrate_chessboard(images, chess_size=chess_size, square_size=square_size)
 
         # Print the calibration results
         print("Camera matrix:")
         print(mtx)
         print("Distortion coefficients:")
-        print(dist)
+        print(dist_coeff)
         print("Rotation vectors:")
         print(rvecs)
         print("Translation vectors:")
@@ -160,7 +160,7 @@ def main(name: str, host: str, port: int, width: int, height: int) -> None:
         if user_input == "y":
             camera_dist = {
                 "mtx": mtx.tolist(),
-                "dist": dist.tolist(),
+                "dist_coeff": dist_coeff.tolist(),
             }
             # Save the camera matrix and distortion coefficients to a YAML file
             with open(

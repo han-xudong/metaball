@@ -7,4 +7,6 @@ message Camera
 {
     double timestamp = 1;
     bytes img = 2;
+    repeated double dist_coeff = 3;
+    repeated double mtx = 4;
 }

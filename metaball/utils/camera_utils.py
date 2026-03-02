@@ -41,7 +41,7 @@ def calibrate_chessboard(
     Returns:
         results (tuple): Calibration results.
             - mtx (numpy.ndarray): Camera matrix.
-            - dist (numpy.ndarray): Distortion coefficients.
+            - dist_coeff (numpy.ndarray): Distortion coefficients.
             - rvecs (list): Rotation vectors.
             - tvecs (list): Translation vectors.
     """
@@ -70,6 +70,6 @@ def calibrate_chessboard(
 
     # Perform camera calibration
     print("Calibrating camera...")
-    ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(obj_points, img_points, gray.shape[::-1], None, None)
+    ret, mtx, dist_coeff, rvecs, tvecs = cv2.calibrateCamera(obj_points, img_points, gray.shape[::-1], None, None)
 
-    return mtx, dist, rvecs, tvecs
+    return mtx, dist_coeff, rvecs, tvecs

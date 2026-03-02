@@ -4,6 +4,7 @@ Camera Subscriber using ZeroMQ and Protobuf.
 
 import zmq
 import numpy as np
+from typing import Tuple
 from metaball.modules.protobuf import cam_msg_pb2
 
 
@@ -57,12 +58,15 @@ class CameraSubscriber:
         self.poller.register(self.subscriber, zmq.POLLIN)
         self.timeout = timeout
 
-    def subscribeMessage(self) -> np.ndarray:
+    def subscribeMessage(self) -> Tuple[np.ndarray, list, list]:
         """
         Subscribe the message.
 
         Returns:
-            img: The image captured by the camera.
+            data (tuple): camera data.
+                - img (np.ndarray): The image captured by the camera.
+                - dist_coeff (list): The distortion coefficients.
+                - mtx (list): The camera matrix.
 
         Raises:
             zmq.ZMQError: If no message is received within the timeout period.
@@ -76,7 +80,7 @@ class CameraSubscriber:
             cam = cam_msg_pb2.Camera()
             cam.ParseFromString(msg)
 
-            return np.frombuffer(cam.img, dtype=np.uint8)
+            return np.frombuffer(cam.img, dtype=np.uint8), cam.dist_coeff, cam.mtx
         else:
             raise RuntimeError("No message received within the timeout period.")
 

@@ -23,7 +23,7 @@ class CameraConfig:
     fps: int = 30
     """Frames per second."""
 
-    dist: Tuple[Tuple[float, ...], ...] = ((-0.150044, 0.051017, 0.000000, 0.000000, -0.067817),)
+    dist_coeff: Tuple[Tuple[float, ...], ...] = ((-0.150044, 0.051017, 0.000000, 0.000000, -0.067817),)
     """Distortion coefficients."""
 
     mtx: Tuple[Tuple[float, ...], ...] = (
