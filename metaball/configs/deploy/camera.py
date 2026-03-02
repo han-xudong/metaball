@@ -8,7 +8,7 @@ from typing import Tuple
 
 @dataclass
 class CameraConfig:
-    host: str = "192.168.1.10"
+    host: str = "10.114.201.1"
     """Camera host address."""
     
     port: int = 5555
@@ -52,7 +52,7 @@ class CameraConfig:
     )
     """Translation vector from marker to camera frame in mm."""
 
-    transfer_rmat: Tuple[Tuple[Tuple[Tuple[float, ...], ...], ...], ...] = (
+    transfer_rmat: Tuple[Tuple[Tuple[float, ...], ...], ...] = (
         (
             (1.0, 0.0, 0.0),
             (0.0, -1.0, 0.0),

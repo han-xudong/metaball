@@ -27,16 +27,28 @@ Clone this repository:
 git clone https://github.com/han-xudong/metaball.git
 ```
 
-We use `uv` to manage Python dependencies. See [uv documentation](https://docs.astral.sh/uv/getting-started/installation/) for installation instructions. Once `uv` is installed, run the following command to set up the environment:
+We use `uv` to manage Python dependencies. See [uv documentation](https://docs.astral.sh/uv/getting-started/installation/) for installation instructions. Once `uv` is installed, run the following commands to set up the environment:
 
 ```bash
 uv sync
-uv pip install -e .
+uv pip install -e ".[all]"
+```
+
+which will install all dependencies for training and deploying MetaBall. If you only want to train the model, install only the training dependencies:
+
+```bash
+uv pip install -e ".[train]"
+```
+
+Or if you only want to deploy it, install only the deploying dependencies:
+
+```bash
+uv pip install -e ".[deploy]"
 ```
 
 ## ⚡ Training
 
-Before training the model, you need to prepare the dataset according to the [training guide](./docs/training.ipynb).
+Before training the model, you need to prepare the dataset according to the [training guide](./docs/training.ipynb). Install the package with `[train]` extras first.
 
 Then, run the following command to train the model:
 
@@ -77,7 +89,7 @@ CAD files of the MetaBall are available on [Fusion](https://a360.co/4ePH4PC). Pl
 
 ## 🚀 Deployment
 
-After connecting the MetaBall to the computer and modifying the configuration, you can deploy it by running the following command:
+After installing the package and connecting the MetaBall to the computer, modify the configuration and deploy it by running:
 
 ```bash
 uv run metaball [options]
@@ -89,8 +101,9 @@ Various configuration options are available:
 |---------------|-----------------------------------------------|--------|----------------------------------|
 | --host        | Host address for the publisher.               | str    | 127.0.0.1                        |
 | --port        | Port number for the publisher.                | int    | 6666                             |
-| --camera-yaml | Path to the camera configuration YAML file.   | str    | ./configs/maixcam-xxxx.yaml      |
 | --onnx-path   | Path to the ONNX model file.                  | str    | ./models/BallNet.onnx            |
+| --camera.host | Camera host address.                          | str    | 10.114.201.1                     |
+| --camera.port | Camera port number.                           | int    | 5555                             |
 
 All data, including images, poses, forces, and node displacements, will be published through TCP (ZeroMQ + Protocol Buffers) in the following format:
 

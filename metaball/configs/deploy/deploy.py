@@ -2,7 +2,8 @@
 Dataclass for deploy configuration parameters.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from .camera import CameraConfig
 
 
 @dataclass
@@ -13,8 +14,7 @@ class DeployConfig:
     port: int = 6666
     """Port number for the publisher."""
 
-    camera_yaml: str = "./configs/maixcam-xxxx.yaml"
-    """Path to the camera configuration YAML file."""
-
     onnx_path: str = "./models/BallNet.onnx"
     """Path to the ONNX model file."""
+    
+    camera: CameraConfig = field(default_factory=CameraConfig)

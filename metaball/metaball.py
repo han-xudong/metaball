@@ -2,14 +2,12 @@
 MetaBall Class.
 """
 
-
 import time
 import cv2
-import yaml
 from metaball.devices.camera import WebCamera
 from metaball.modules.zmq import MetaBallPublisher
 from metaball.models.onnx.ballnet import BallNet
-from metaball.configs.deploy import CameraConfig, DeployConfig
+from metaball.configs.deploy import DeployConfig
 
 
 class MetaBall:
@@ -34,14 +32,8 @@ class MetaBall:
             cfg (DeployConfig): The deployment configuration.
         """
 
-        # Load the metaball parameters
-        with open(cfg.camera_yaml, "r") as f:
-            camera_params_dict = yaml.safe_load(f)
-
-        camera_cfg = CameraConfig(**camera_params_dict)
-
         # Create a camera
-        self.camera = WebCamera(camera_cfg)
+        self.camera = WebCamera(cfg.camera)
 
         # Create a BallNet model
         self.ballnet = BallNet(cfg.onnx_path)

@@ -492,6 +492,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--params_path",
         type=str,
+        required=False,
         help="The path of the camera parameters.",
     )
     parser.add_argument(
@@ -502,9 +503,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     # Read the camera parameters
-    with open(args.params_path, "r") as f:
-        camera_params = yaml.load(f.read(), Loader=yaml.Loader)
-    camera_cfg = CameraConfig(**camera_params)
+    if args.params_path is None:
+        camera_cfg = CameraConfig()
+    else:
+        with open(args.params_path, "r") as f:
+            camera_params = yaml.load(f.read(), Loader=yaml.Loader)
+        camera_cfg = CameraConfig(**camera_params)
 
     try:
         
